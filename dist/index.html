@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MehmetEndüstriyelTakip</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Profesyonel çözümler için tasarlandı">
+    <meta name="keywords" content="orta gerilim, elektrik, hücre imalat, endüstriyel takip, mehmet">
+    <meta name="author" content="MehmetEndüstriyelTakip">
+    
+    <!-- PWA support -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="METS">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.com/">
+    <meta property="og:title" content="MehmetEndüstriyelTakip">
+    <meta property="og:description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Profesyonel çözümler için tasarlandı">
+    <meta property="og:image" content="/assets/images/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://your-domain.com/">
+    <meta property="twitter:title" content="MehmetEndüstriyelTakip">
+    <meta property="twitter:description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Profesyonel çözümler için tasarlandı">
+    <meta property="twitter:image" content="/assets/images/og-image.jpg">
+
+    <!-- Preload fonts -->
+    <link rel="preload" href="/assets/fonts/sample-font.woff" as="font" type="font/woff" crossorigin>
+    
+    <!-- DNS prefetch -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- Offline support -->
+    <link rel="preload" href="./offline.html" as="document">
+    
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Kritik CSS - Sayfa yüklenirken gösterilecek minimum stil */
+        html, body {
+            height: 100%; 
+            margin: 0; 
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .app-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            z-index: 9999;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .app-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 123, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #0d6efd;
+            animation: spin 1s linear infinite;
+        }
+        .app-loading .brand {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #0d6efd, #6610f2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #121212; }
+            .app-loading { background-color: #121212; color: #e2e2e2; }
+        }
+    </style>
+  <script type="module" crossorigin src="./assets/index.DR3g4u-R.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/vendor-vue.Cn8zEwKq.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-firebase.4azA1Kf8.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-chart.By1hop_s.js">
+  <link rel="stylesheet" crossorigin href="./assets/index.0SLwQyFG.css">
+<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+<body>
+    <div id="app">
+        <!-- Sayfa yüklenirken gösterilecek yükleme göstergesi -->
+        <div class="app-loading">
+            <div class="spinner"></div>
+            <div class="brand">METS</div>
+            <noscript>
+                <p>Bu uygulama çalışmak için JavaScript gerektirir. Lütfen JavaScript'i etkinleştirin.</p>
+            </noscript>
+        </div>
+    </div>
+</body>
+</html>

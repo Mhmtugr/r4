@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# CSS, JS, Images
+Allow: /css/
+Allow: /js/
+Allow: /img/
+
+# Netlify ile ilgili dosyaları engelle
+Disallow: /.netlify/
+
+# Sitemap
+Sitemap: https://mehmetendustriyeltakip.netlify.app/sitemap.xml
