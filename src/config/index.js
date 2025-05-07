@@ -63,11 +63,11 @@ const defaults = {
         description: 'Google tarafından geliştirilen hızlı ve verimli model.',
         isDefault: true, // Bu model varsayılan olarak seçilsin mi?
       },
-      'google/gemini-2.5-pro-exp-03-25': {
-        key: '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',
-        name: 'google/gemini-2.5-pro-exp-03-25',
+      'google/gemini-pro-1.5': { // Anahtar düzeltildi: 'google/gemini-2.5-pro-exp-03-25' -> 'google/gemini-pro-1.5'
+        key: 'google/gemini-pro-1.5', // Anahtar düzeltildi
+        name: 'Gemini 1.5 Pro', // İsim düzeltildi
         service: 'gemini',
-        capabilities: ['Detaylı Analiz', 'Uzun Metinler'],
+        capabilities: ['Detaylı Analiz', 'Uzun Metinler', 'Kod Üretimi'], // Yetenekler güncellendi
         description: 'Google tarafından geliştirilen daha kapsamlı ve güçlü model.',
       },
       'openrouter-gpt3.5-turbo': {
@@ -76,7 +76,7 @@ const defaults = {
         service: 'openRouter',
         modelId: 'openai/gpt-3.5-turbo', // OpenRouter için model ID'si
         capabilities: ['Genel Sohbet', 'Popüler Model'],
-        description: 'OpenAI'nin popüler ve dengeli modeli (OpenRouter üzerinden).',
+        description: 'OpenAI\'nin popüler ve dengeli modeli (OpenRouter üzerinden).',
       },
       'openrouter-gemini-flash': {
         key: 'openrouter-gemini-flash',
