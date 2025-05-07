@@ -189,6 +189,3 @@ export {
 
 // Yaygın kullanım için varsayılan logger'ı da export et
 export default defaultLogger;
-
-// Add named export alias for logger
-export const logger = defaultLogger;

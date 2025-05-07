@@ -12,7 +12,6 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
   const isAuthenticated = ref(false);
   const loading = ref(true);
-  const sessionInitialized = ref(false);
   const error = ref(null);
   const isDemoMode = ref(false);
   
@@ -23,8 +22,6 @@ export const useAuthStore = defineStore('auth', () => {
   
   // Actions
   async function initialize() {
-    if (sessionInitialized.value) return { success: true, isAuthenticated: isAuthenticated.value };
-
     try {
       loading.value = true;
       error.value = null;
@@ -37,15 +34,11 @@ export const useAuthStore = defineStore('auth', () => {
       
       return { success: true, isAuthenticated: authStatus };
     } catch (err) {
-      console.error('Auth durumu kontrol hatası (store):', err);
+      console.error('Auth durumu kontrol hatası:', err);
       error.value = err.message;
-      isAuthenticated.value = false;
-      user.value = null;
-      isDemoMode.value = false;
       return { success: false, error: err.message };
     } finally {
       loading.value = false;
-      sessionInitialized.value = true;
     }
   }
   
@@ -60,16 +53,16 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = result.user;
         isAuthenticated.value = true;
         isDemoMode.value = !!result.demo;
-        sessionInitialized.value = true;
         
-        router.push(router.currentRoute.value.query.redirect || '/');
+        // Başarılı girişten sonra yönlendirme
+        router.push('/');
         return { success: true, user: result.user };
       } else {
         error.value = result.error;
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Login hatası (store):', err);
+      console.error('Login hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -88,19 +81,21 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = result.user;
         isAuthenticated.value = true;
         isDemoMode.value = !!result.demo;
-        sessionInitialized.value = true;
         
-        router.push(router.currentRoute.value.query.redirect || '/');
+        // Başarılı girişten sonra yönlendirme
+        router.push('/');
         return { success: true };
       } else {
+        // Kullanıcı popup'ı kapattıysa sessizce başarısız - hata mesajı gösterme
         if (result.code === 'auth/popup-closed-by-user') {
           return { success: false, silent: true };
         }
+        
         error.value = result.error;
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Google ile giriş hatası (store):', err);
+      console.error('Google ile giriş hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -113,22 +108,25 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true;
       error.value = null;
       
+      console.log('Demo giriş başlıyor...');
       const result = await authService.demoLogin();
       
       if (result.success) {
+        console.log('Demo giriş başarılı:', result.user);
         user.value = result.user;
         isAuthenticated.value = true;
         isDemoMode.value = true;
-        sessionInitialized.value = true;
         
-        router.push(router.currentRoute.value.query.redirect || '/');
+        // Başarılı demo girişten sonra ana sayfaya yönlendirme
+        router.push('/');
         return { success: true, user: result.user };
       } else {
         error.value = result.error;
+        console.error('Demo giriş başarısız:', result.error);
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Demo giriş hatası (store):', err);
+      console.error('Demo giriş hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -147,8 +145,8 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = result.user;
         isAuthenticated.value = true;
         isDemoMode.value = !!result.demo;
-        sessionInitialized.value = true;
         
+        // Başarılı kayıt sonrası yönlendirme
         router.push('/');
         return { success: true };
       } else {
@@ -156,7 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Kayıt hatası (store):', err);
+      console.error('Kayıt hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -178,7 +176,7 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: result.error };
       }
     } catch (err) {
-      console.error('Şifre sıfırlama hatası (store):', err);
+      console.error('Şifre sıfırlama hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -192,15 +190,17 @@ export const useAuthStore = defineStore('auth', () => {
       
       await authService.logout();
       
+      // State'i temizle
       user.value = null;
       isAuthenticated.value = false;
       isDemoMode.value = false;
       
+      // Giriş sayfasına yönlendir
       router.push('/login');
       
       return { success: true };
     } catch (err) {
-      console.error('Çıkış hatası (store):', err);
+      console.error('Çıkış hatası:', err);
       error.value = err.message;
       return { success: false, error: err.message };
     } finally {
@@ -213,7 +213,6 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     isAuthenticated,
     loading,
-    sessionInitialized,
     error,
     isDemoMode,
     

@@ -8,12 +8,12 @@
 }
 
 .user-message {
-    background-color: var(--status-planned-bg); // Değişken kullanıldı (veya özel bir chat değişkeni tanımlanabilir)
+    background-color: #e3f2fd; // Renk değişkeni kullanılabilir
     margin-left: auto;
 }
 
 .ai-message {
-    background-color: var(--light-color); // Değişken kullanıldı (veya özel bir chat değişkeni tanımlanabilir)
+    background-color: #f1f1f1; // Renk değişkeni kullanılabilir
     margin-right: auto;
 }
 

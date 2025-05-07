@@ -1,87 +1,83 @@
 <template>
-  <div class="ai-chatbot">
-    <div class="ai-chatbot-btn" @click="openChatModal">
-      <i class="bi bi-robot"></i>
-      <span v-if="unreadNotifications > 0" class="notification-badge">{{ unreadNotifications }}</span>
-    </div>
+  <div class="ai-chatbot-button">
+    <button 
+      class="floating-ai-button"
+      @click="openChatModal"
+      :disabled="isProcessing"
+    >
+      <span v-if="isProcessing" class="spinner"></span>
+      <span v-else>
+        <i class="fas fa-robot"></i>
+        <span class="button-text">METS AI Asistan</span>
+      </span>
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useNotificationStore } from '@/store/notification'
-import { useTechnicalStore } from '@/store/technical'
+import { computed } from 'vue';
+import { useTechnicalStore } from '@/store/technical';
 
-// Bildirimler için store
-const notificationStore = useNotificationStore()
-const technicalStore = useTechnicalStore()
-const unreadNotifications = ref(0)
+const technicalStore = useTechnicalStore();
 
-// Bildirim sayısını güncelle
-const updateNotificationCount = () => {
-  // Gerçek uygulamada burada notificationStore'dan alınacak
-  unreadNotifications.value = notificationStore.getUnreadCount || Math.floor(Math.random() * 5)
-}
-
-// Chat modali aç
 const openChatModal = () => {
-  technicalStore.setAIChatModalOpen(true)
-  unreadNotifications.value = 0 // Bildirimleri temizle
-}
+  technicalStore.openChatModal();
+};
 
-onMounted(() => {
-  updateNotificationCount()
-  
-  // Demo için bildirim sayısını periyodik olarak güncelle
-  setInterval(() => {
-    // Gerçek uygulamada gerekli olmayacak
-    if (!technicalStore.isAIChatModalOpen) {
-      updateNotificationCount()
-    }
-  }, 60000) // 1 dakikada bir
-})
+const isProcessing = computed(() => technicalStore.isProcessing);
 </script>
 
-<style scoped>
-.ai-chatbot {
+<style lang="scss" scoped>
+.ai-chatbot-button {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999;
 }
 
-.ai-chatbot-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: var(--primary-color, #0d6efd);
+.floating-ai-button {
+  background-color: #2d5ba9;
   color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 25px;
+  font-size: 14px;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: all 0.3s;
+
+  &:hover {
+    background-color: #234a8e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  }
+
+  &:disabled {
+    background-color: #b3b3b3;
+    cursor: not-allowed;
+  }
+
+  .button-text {
+    margin-left: 5px;
+  }
 }
 
-.ai-chatbot-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-}
-
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: var(--danger-color, #dc3545);
-  color: white;
-  border-radius: 50%;
+.spinner {
+  display: inline-block;
   width: 20px;
   height: 20px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

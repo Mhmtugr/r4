@@ -1,101 +1,80 @@
-@use "@/styles/base/variables" as vars;
-@use "@/styles/base/reset";
-@use "@/styles/base/base";
-@use "@/styles/layout/layout";
-@use "@/styles/layout/sidebar"; // Sidebar stillerini dahil et
-@use "@/styles/layout/responsive"; // Responsive stillerini dahil et
-@use "@/styles/components/buttons";
-@use "@/styles/components/cards";
-@use "@/styles/components/badges";
-@use "@/styles/components/dashboard-widgets";
-@use "@/styles/components/charts";
-@use "@/styles/components/chat";
-@use "@/styles/components/progress"; // Progress stillerini dahil et
-@use "@/styles/components/tables"; // Yeni eklenen tablo stilleri
-@use "@/styles/components/materials"; // Yeni eklenen malzeme stilleri
-@use "@/styles/components/gantt"; // Gantt stillerini dahil et
+@use "base/variables" as vars;
+@use "base/reset";
+@use "base/base";
+@use "layout/layout";
+@use "layout/sidebar";
+@use "components/buttons";
+@use "components/cards";
+@use "components/badges";
+@use "components/dashboard-widgets";
+@use "components/charts";
+@use "components/chat";
 
-// Bootstrap modern import
-@use "bootstrap/scss/bootstrap" as bootstrap;
+// Import Bootstrap after @use rules
+@import "bootstrap/scss/bootstrap";
 
-// Import Bootstrap Icons as url import
-@use "bootstrap-icons/font/bootstrap-icons.css" as bootstrap-icons;
-
-// Theme colors (Bu değişkenler _variables.scss içinde tanımlı, burada tekrar tanımlamaya gerek yok)
-/*
+// Theme colors
 :root {
-  --primary-color: #2c3e50; 
-  // ... Diğer değişkenler ...
-  --material-critical-bg: #ffebee;
+  --primary: #3a75c4;
+  --primary-light: #4e89d8;
+  --primary-dark: #2a65b4;
+  --secondary: #6c757d;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --bg-sidebar: #2c3e50;
+  --bg-main: #f4f6f9;
+  --border-color: #dee2e6;
+  --text-color: #333;
+  --text-muted: #6c757d;
+  --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+  --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
 }
-*/
 
-// Global styles (Bu stil _base.scss içinde tanımlı)
-/*
+// Global styles
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-content);
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-color);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
 }
-*/
 
-// Card styles (Bu stiller _cards.scss içinde tanımlı)
-/*
-.card { ... }
-.card-header { ... }
-*/
+// Status badges
+.status-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+}
 
-// Status badges (Bu stiller _badges.scss içinde tanımlı)
-/*
-.status-badge { ... }
-.status-planned { ... }
-// ... Diğer durum rozetleri ...
-*/
+.status-planned { background-color: #cfe2ff; color: #084298; }
+.status-progress { background-color: #fff3cd; color: #664d03; }
+.status-delayed { background-color: #f8d7da; color: #842029; }
+.status-completed { background-color: #d1e7dd; color: #0f5132; }
 
-// Priority borders (Bu stiller _cards.scss içine taşınabilir veya utility olarak kalabilir)
-/*
-.priority-high { ... }
-.priority-medium { ... }
-.priority-low { ... }
-*/
+// Chart containers
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 250px;
+}
 
-// AI Chatbot button styles (Bu stiller _buttons.scss veya _chat.scss içinde tanımlı)
-/*
-.ai-chatbot { ... }
-.ai-chatbot-btn { ... }
-.notification-badge { ... } // Bu _badges.scss içinde
-*/
+// Responsive breakpoints
+$sidebar-width: vars.$sidebar-width;
+$sidebar-collapsed-width: vars.$sidebar-collapsed-width;
+$header-height: vars.$header-height;
+$footer-height: 50px;
 
-// Progress bar style (Bu stil _progress.scss içinde tanımlı)
-/*
-.progress-thin { ... }
-*/
-
-// Custom table style (Bu stil _tables.scss içinde tanımlı)
-/*
-.custom-table th { ... }
-*/
-
-// Material status styles (Bu stiller _materials.scss içinde tanımlı)
-/*
-.material-required { ... }
-.material-available { ... }
-.material-critical { ... }
-*/
-
-// Gantt chart styles (Bu stiller _gantt.scss içinde tanımlı)
-/*
-.gantt-container { ... }
-// ... Diğer Gantt stilleri ...
-*/
-
-// Chat modal styles (Bu stiller _chat.scss içinde tanımlı)
-/*
-.chat-message { ... }
-.user-message { ... }
-.ai-message { ... }
-*/
-
-// Scrollbar styling (Global olarak kalabilir)
+// Scrollbar styling
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

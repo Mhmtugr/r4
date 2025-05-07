@@ -1,70 +1,171 @@
 @use "../base/variables" as vars;
 
-// Sidebar stilleri (ornekindex.html'den taşındı)
+// Sidebar stiller
 .sidebar {
-  background-color: var(--bg-sidebar); // CSS değişkeni kullanıldı
-  color: var(--sidebar-text); // CSS değişkeni kullanıldı
-  height: 100vh;
   position: fixed;
-  padding-top: 20px;
-  width: vars.$sidebar-width; // SASS değişkeni kullanıldı
-  transition: width 0.3s ease; // Geçiş eklendi
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: vars.$sidebar-width;
+  background: var(--bg-sidebar);
+  color: #fff;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 
-  .nav-link {
-    color: var(--sidebar-text);
-    margin-bottom: 5px;
-    border-radius: 5px;
-    padding: 10px 15px;
-    display: flex; // İkon ve metni hizalamak için
-    align-items: center; // İkon ve metni hizalamak için
-
-    &:hover,
-    &.active {
-      background-color: var(--sidebar-hover-bg); // CSS değişkeni kullanıldı
-      color: var(--sidebar-text-active); // CSS değişkeni kullanıldı
-    }
-
-    i {
-      margin-right: 10px;
-      width: 20px; // İkon genişliği sabitlendi
-      text-align: center;
-    }
-  }
-
-  // Çöktüğünde stiller (örnek)
-  &.collapsed {
+  &-collapsed {
     width: vars.$sidebar-collapsed-width;
-
-    .nav-link span {
-      display: none; // Metni gizle
+    
+    .nav-text {
+      display: none;
     }
-
-    .sidebar-footer p {
-        display: none; // Alt bilgiyi gizle
+    
+    .nav-icon {
+      margin-right: 0;
+    }
+    
+    .sidebar-header {
+      h3 {
+        display: none;
+      }
+      
+      .logo-icon {
+        margin: 0 auto;
+      }
     }
   }
-
-  // Alt kısım (Footer)
+  
+  &-header {
+    height: vars.$header-height;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    h3 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      margin-right: 0.75rem;
+    }
+  }
+  
+  .nav-menu {
+    padding: 1rem 0;
+    list-style: none;
+    margin: 0;
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
+      
+      &.active > .nav-link {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border-left: 4px solid var(--primary-light);
+      }
+      
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 4px solid transparent;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          color: #fff;
+        }
+        
+        .nav-icon {
+          margin-right: 0.75rem;
+          font-size: 1.25rem;
+          width: 1.5rem;
+          text-align: center;
+          transition: all 0.3s;
+        }
+      }
+    }
+    
+    .nav-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0.5rem 1rem;
+    }
+  }
+  
+  .submenu {
+    padding-left: 1rem;
+    list-style: none;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    
+    &.open {
+      max-height: 500px;
+      transition: max-height 0.5s ease-in;
+    }
+  }
+  
   .sidebar-footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 1rem;
-      text-align: center;
-      color: var(--sidebar-text);
-      font-size: 0.8rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.9);
+      
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 0.75rem;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+      
+      .user-details {
+        h5 {
+          font-size: 0.9rem;
+          margin: 0;
+        }
+        
+        span {
+          font-size: 0.75rem;
+          opacity: 0.7;
+        }
+      }
+    }
   }
 }
 
-// Bu global stiller _layout.scss veya _responsive.scss içine taşınabilir
-/*
-.main-content {
-  transition: margin-left 0.3s ease;
-  margin-left: vars.$sidebar-width;
+// Medya sorguları
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
 }
-
-.sidebar-collapsed .main-content {
-  margin-left: vars.$sidebar-collapsed-width;
-}
-*/

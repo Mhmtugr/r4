@@ -23,20 +23,77 @@ import { apiService } from '@/services/api-service'
 import { useEventBus } from '@/utils/event-bus'
 import { registerComponents } from '@/utils/component-registrar'
 
-// Service Worker Kaydı (ornekindex.html'den taşındı)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // NOTE: service-worker.js yolunun build sonrası doğru olduğundan emin olun.
-    // Vite genellikle bunu kök dizine koyar. Gerekirse yolu ayarlayın.
-    navigator.serviceWorker.register('/service-worker.js') // '/service-worker.js' veya import.meta.env.BASE_URL + 'service-worker.js'
-      .then(registration => {
-        console.log('Service Worker başarıyla kaydedildi:', registration.scope);
-      })
-      .catch(error => {
-        console.error('Service Worker kaydı başarısız:', error);
-      });
-  });
-}
+// Global API Configuration
+window.DEEPSEEK_API_KEY = window.DEEPSEEK_API_KEY || 'sk-3a17ae40b3e445528bc988f04805e54b' // Demo anahtar
+
+// Global contexts for DeepSeek - Yapay zeka modları
+window.deepseekModel = {
+  apiKey: window.DEEPSEEK_API_KEY,
+  modelName: 'deepseek-chat',
+  temperature: 0.7,
+  maxTokens: 1000,
+  context: {
+    // Orta gerilim anahtarlama ekipmanları hakkında temel bilgiler
+    technical: `
+      Orta gerilim anahtarlama ekipmanları (hücreler) hakkında bilgiler:
+      - RM 36 CB: Vakum kesicili hücre (Circuit Breaker), 36kV nominal gerilim, 630A-2500A nominal akım
+      - RM 36 LB: Yük ayırıcılı hücre (Load Break Switch), 36kV nominal gerilim
+      - RM 36 FL: Sigortalı hücre (Fused Load break), 36kV nominal gerilim
+      - RM 36 RMU: Ring Main Unit, 36kV nominal gerilim
+      
+      Standartlar: IEC 62271-200, LSC2A-PM sınıfı, E3 ark sınıfı
+      Koruma Fonksiyonları: 50/51 (aşırı akım), 50N/51N (toprak kaçağı)
+    `,
+    // Üretim süreçleri ve planlaması
+    production: `
+      Orta gerilim hücresi üretim süreçleri:
+      1. Mekanik üretim: Metal gövde üretimi, bükme, kesme, kaynak işlemleri
+      2. Boyahane: Toz boya uygulaması
+      3. Montaj: Kesici, ayırıcı, bara montajı
+      4. Elektrik montajı: Kontrol devreleri, röle bağlantıları
+      5. Test: Yüksek gerilim dayanım testi, fonksiyon testleri
+      
+      Üretim süreleri:
+      - CB hücresi: ~3-4 gün
+      - LB hücresi: ~2-3 gün
+      - FL hücresi: ~2 gün
+      - RMU hücresi: ~4-5 gün
+    `,
+    // Satış ve sipariş bilgileri
+    sales: `
+      Müşteri segmentleri:
+      - Elektrik dağıtım şirketleri (AYEDAŞ, VEDAŞ, BEDAŞ, ÇEDAŞ vb.)
+      - Elektrik üretim şirketleri
+      - Endüstriyel tesisler
+      - Altyapı projeleri
+      
+      Sipariş süreci:
+      1. Müşteri teknik şartnameleri incelenir
+      2. Teknik şartnameye göre uygun hücre tipleri belirlenir
+      3. Malzeme listeleri oluşturulur
+      4. Stok kontrolü yapılır
+      5. Üretim planlaması yapılır
+      6. Üretim, test ve sevkiyat aşamaları gerçekleştirilir
+    `
+  }
+};
+
+// Demo login fonksiyonu
+window.demoLogin = function(email, password) {
+  console.log('Demo giriş yapılıyor...', email || 'demo@example.com');
+  return {
+    success: true,
+    user: {
+      uid: 'demo-user-001',
+      email: email || 'demo@example.com',
+      name: 'Demo Kullanıcı',
+      role: 'admin',
+      displayName: 'Demo Kullanıcı',
+      photoURL: null
+    },
+    demo: true
+  };
+};
 
 // Oluştur ve ayarla
 const app = createApp(App)
