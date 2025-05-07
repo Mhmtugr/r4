@@ -8,23 +8,23 @@
 }
 
 .status-planned {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background-color: var(--status-planned-bg); // Değişken kullanıldı
+    color: var(--status-planned-text); // Değişken kullanıldı
 }
 
 .status-in-progress {
-    background-color: #fff8e1;
-    color: #ff8f00;
+    background-color: var(--status-in-progress-bg); // Değişken kullanıldı
+    color: var(--status-in-progress-text); // Değişken kullanıldı
 }
 
 .status-delayed {
-    background-color: #ffebee;
-    color: #d32f2f;
+    background-color: var(--status-delayed-bg); // Değişken kullanıldı
+    color: var(--status-delayed-text); // Değişken kullanıldı
 }
 
 .status-completed {
-    background-color: #e8f5e9;
-    color: #388e3c;
+    background-color: var(--status-completed-bg); // Değişken kullanıldı
+    color: var(--status-completed-text); // Değişken kullanıldı
 }
 
 .notification-badge {
@@ -40,4 +40,4 @@
     display: flex;
     align-items: center;
     justify-content: center;
-} 
+}

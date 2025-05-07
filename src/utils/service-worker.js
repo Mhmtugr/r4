@@ -217,3 +217,242 @@ export default {
   showUpdateNotification,
   listenToNetworkChanges
 };
+
+/**
+ * Service Worker Yönetimi
+ * Çevrimdışı çalışma modu ve PWA özellikleri için
+ */
+
+const CACHE_NAME = 'mets-app-cache-v1';
+
+// Önbelleklenecek varlıklar
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/offline.html',
+  '/assets/css/main.css',
+  '/assets/js/main.js',
+  '/assets/images/logo.png',
+  '/assets/icons/favicon.ico'
+];
+
+// İsteğe bağlı önbelleğe alma stratejileri
+const strategies = {
+  networkFirst: async (cacheName, request) => {
+    try {
+      // Önce ağdan deneyin
+      const networkResponse = await fetch(request);
+      const cache = await caches.open(cacheName);
+      cache.put(request, networkResponse.clone());
+      return networkResponse;
+    } catch (err) {
+      // Ağ erişimi yoksa önbellekten deneyin
+      const cachedResponse = await caches.match(request);
+      return cachedResponse || caches.match('/offline.html');
+    }
+  },
+
+  cacheFirst: async (cacheName, request) => {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    try {
+      const networkResponse = await fetch(request);
+      const cache = await caches.open(cacheName);
+      cache.put(request, networkResponse.clone());
+      return networkResponse;
+    } catch (err) {
+      return caches.match('/offline.html');
+    }
+  },
+  
+  staleWhileRevalidate: async (cacheName, request) => {
+    // Önbelleği kontrol edin
+    const cachedResponse = await caches.match(request);
+    
+    // Arka planda güncelleme işlemini başlatın
+    const fetchPromise = fetch(request)
+      .then(networkResponse => {
+        caches.open(cacheName)
+          .then(cache => {
+            cache.put(request, networkResponse.clone());
+          });
+        return networkResponse;
+      })
+      .catch(error => {
+        console.error('Fetch failed; returning offline page instead.', error);
+        return caches.match('/offline.html');
+      });
+    
+    // Önbellekte varsa onu hemen döndürün, yoksa fetch işlemini bekleyin
+    return cachedResponse || fetchPromise;
+  }
+};
+
+// Service worker yükleme ve önbelleğe alma
+self.addEventListener('install', event => {
+  console.log('Service Worker yükleniyor...');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Varlıklar önbelleğe alınıyor');
+        return cache.addAll(urlsToCache);
+      })
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Service worker aktifleştirme ve eski önbellekleri temizleme
+self.addEventListener('activate', event => {
+  console.log('Service Worker aktifleştirildi');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Eski önbellek temizleniyor:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// İstek yakalama ve strateji uygulama
+self.addEventListener('fetch', event => {
+  // API istekleri için network-first stratejisi
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(strategies.networkFirst(CACHE_NAME, event.request));
+    return;
+  }
+  
+  // Statik kaynaklar için cache-first stratejisi
+  if (event.request.url.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    event.respondWith(strategies.cacheFirst(CACHE_NAME, event.request));
+    return;
+  }
+  
+  // HTML sayfaları için stale-while-revalidate stratejisi
+  if (event.request.mode === 'navigate' || (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(strategies.staleWhileRevalidate(CACHE_NAME, event.request));
+    return;
+  }
+  
+  // Diğer tüm istekler için network-first stratejisi
+  event.respondWith(strategies.networkFirst(CACHE_NAME, event.request));
+});
+
+// Push bildirimlerini yakala
+self.addEventListener('push', event => {
+  if (!event.data) {
+    return;
+  }
+  
+  try {
+    const payload = event.data.json();
+    const options = {
+      body: payload.body,
+      icon: '/assets/icons/notification-icon.png',
+      badge: '/assets/icons/badge-icon.png',
+      data: payload.data || {},
+      actions: payload.actions || [],
+      vibrate: [100, 50, 100]
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(payload.title, options)
+    );
+  } catch (error) {
+    console.error('Push bildirimi işlenirken hata:', error);
+  }
+});
+
+// Bildirim tıklama olaylarını yakala
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({type: 'window'}).then(windowClients => {
+      // Açık bir pencere varsa, ona odaklan ve URL'i güncelle
+      for (const client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // Yoksa yeni bir pencere aç
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Senkronizasyon olaylarını yakala (çevrimdışı verileri senkronize etmek için)
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-pending-changes') {
+    event.waitUntil(syncPendingChanges());
+  }
+});
+
+// Çevrimdışı değişiklikleri senkronize et
+async function syncPendingChanges() {
+  try {
+    const db = await openDB();
+    const pendingActions = await db.getAll('pendingActions');
+    
+    for (const action of pendingActions) {
+      try {
+        await processPendingAction(action);
+        await db.delete('pendingActions', action.id);
+      } catch (error) {
+        console.error(`Bekleyen işlem senkronize edilemedi (ID: ${action.id}):`, error);
+      }
+    }
+    
+    console.log('Tüm bekleyen değişiklikler senkronize edildi.');
+  } catch (error) {
+    console.error('Bekleyen değişiklikler senkronize edilirken hata:', error);
+  }
+}
+
+// IndexedDB'ye erişim için yardımcı fonksiyon
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('metsOfflineDB', 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      db.createObjectStore('pendingActions', { keyPath: 'id', autoIncrement: true });
+      db.createObjectStore('offlineData', { keyPath: 'key' });
+    };
+  });
+}
+
+// Bekleyen işlemi işle
+async function processPendingAction(action) {
+  const { type, url, method, data, headers } = action;
+  
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers
+    },
+    body: data ? JSON.stringify(data) : undefined
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Network yanıtı başarısız: ${response.status}`);
+  }
+  
+  return response.json();
+}

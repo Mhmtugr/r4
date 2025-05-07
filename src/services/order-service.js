@@ -5,6 +5,7 @@ import {
   updateDocument, 
   getDocument, 
   queryDocuments,
+  deleteDocument, // deleteDocument'ı import et
   
   // Firebase collections
   collections,
@@ -19,18 +20,10 @@ import {
   db
 } from './firebase-service';
 
-/**
- * Sipariş numarası oluştur
- * @param {string} orderId - Sipariş ID'si
- * @returns {string} Oluşturulan sipariş numarası
- */
-const generateOrderNumber = (orderId) => {
-  const now = new Date();
-  const year = now.getFullYear().toString().substr(-2); // Son 2 haneli yıl
-  const month = ('0' + (now.getMonth() + 1)).slice(-2); // İki haneli ay
-  
-  return `${year}-${month}-${orderId.substring(0, 4).toUpperCase()}`;
-};
+// stringUtils'dan sipariş ID oluşturucuyu import et
+import { generateOrderId } from '@/utils/stringUtils';
+// dateUtils'dan tarih formatlayıcıyı import et
+import { formatDate } from '@/utils/dateUtils';
 
 /**
  * Tüm siparişleri getir
@@ -105,24 +98,29 @@ const filterOrders = async (filters = {}) => {
 
 /**
  * Sipariş ekle
- * @param {Object} orderData - Eklenecek sipariş verileri
- * @returns {Promise<Object>} Eklenen sipariş bilgisi
+ * @param {Object} orderData - Eklenecek sipariş verileri (orderNo olmadan)
+ * @returns {Promise<Object>} Eklenen sipariş bilgisi (id ve orderNo içerir)
  */
 const addOrder = async (orderData) => {
   try {
-    // Sipariş ekle ve ID'sini al
-    const { id } = await addDocument('orders', orderData);
+    // Sipariş numarasını oluştur (myrule2.mdc formatı: #YYMM-RR)
+    const orderNo = generateOrderId();
     
-    // Sipariş no oluştur
-    const orderNo = generateOrderNumber(id);
+    // Sipariş verisine oluşturulan numarayı ve oluşturulma zamanını ekle
+    const dataToSave = {
+      ...orderData,
+      orderNo: orderNo,
+      createdAt: new Date(), // Firebase servisi zaten timestamp ekleyebilir, ama burada da ekleyelim
+      updatedAt: new Date()
+    };
     
-    // Sipariş numarasını güncelle
-    const docRef = doc(db, 'orders', id);
-    await updateDoc(docRef, { orderNo });
+    // Siparişi Firebase'e ekle
+    const docRef = await addDocument('orders', dataToSave);
     
+    // Eklenen dokümanın ID'sini ve oluşturulan sipariş numarasını döndür
     return {
-      id,
-      orderNo
+      id: docRef.id,
+      orderNo: orderNo
     };
   } catch (error) {
     console.error("Sipariş ekleme hatası:", error);
@@ -381,14 +379,21 @@ const calculateExtraHours = (stages) => {
 };
 
 /**
- * Tarihi formatlar
- * @private
- * @param {Date} date - Formatlanacak tarih
- * @returns {string} Formatlanmış tarih
+ * Sipariş sil
+ * @param {string} orderId - Silinecek sipariş ID'si
+ * @returns {Promise<void>}
  */
-const formatDate = (date) => {
-  if (!date) return '';
-  return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+const deleteOrder = async (orderId) => {
+  try {
+    // Firebase servisindeki deleteDocument fonksiyonunu çağır
+    await deleteDocument('orders', orderId);
+    // İlgili diğer verileri silmek gerekebilir (örn: malzemeler, notlar, üretim aşamaları)
+    // Bu kısım daha sonra eklenebilir veya ilişkili verilerin silinmesi
+    // Firebase Functions (Cloud Functions) ile otomatikleştirilebilir.
+  } catch (error) {
+    console.error("Sipariş silme hatası:", error);
+    throw error; // Hatanın yukarıya iletilmesi
+  }
 };
 
 /**
@@ -403,9 +408,9 @@ const useOrderService = () => {
     updateOrder,
     getOrderDetail,
     updateOrderStatus,
-    generateOrderNumber,
     getOrderByNumber,
-    getProductionPlanForOrder
+    getProductionPlanForOrder,
+    deleteOrder // deleteOrder'ı ekle
   };
 };
 
@@ -416,8 +421,8 @@ export {
   updateOrder,
   getOrderDetail,
   updateOrderStatus,
-  generateOrderNumber,
   getOrderByNumber,
   getProductionPlanForOrder,
+  deleteOrder, // deleteOrder'ı export et
   useOrderService
 };
