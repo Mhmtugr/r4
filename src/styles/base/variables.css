@@ -1,0 +1,113 @@
+/**
+ * CSS Değişkenleri - Renk, boyut ve tipografi değişkenleri
+ */
+
+:root {
+  /* Ana Renkler */
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --light-color: #ecf0f1;
+  --dark-color: #34495e;
+
+  /* Nötr Renkler */
+  --white: #ffffff;
+  --gray-100: #f8fafc;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --black: #000000;
+
+  /* Durum Renkleri */
+  --status-planned: #e3f2fd;
+  --status-planned-text: #1976d2;
+  --status-in-progress: #fff8e1;
+  --status-in-progress-text: #ff8f00;
+  --status-delayed: #ffebee;
+  --status-delayed-text: #d32f2f;
+  --status-completed: #e8f5e9;
+  --status-completed-text: #388e3c;
+
+  /* Malzeme Durumları */
+  --material-required-bg: #fff3e0;
+  --material-available-bg: #e8f5e9;
+  --material-critical-bg: #ffebee;
+
+  /* Tipografi */
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-md: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+
+  /* Boşluklar */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+  --spacing-3xl: 4rem;     /* 64px */
+
+  /* Z-index değerleri */
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+  --z-toast: 80;
+
+  /* Border-radius */
+  --border-radius-sm: 0.25rem;  /* 4px */
+  --border-radius: 0.5rem;      /* 8px */
+  --border-radius-lg: 0.75rem;  /* 12px */
+  --border-radius-xl: 1rem;     /* 16px */
+  --border-radius-full: 9999px; /* Yuvarlak */
+
+  /* Box-shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+
+  /* Geçiş süreleri */
+  --transition-fast: 150ms;
+  --transition: 300ms;
+  --transition-slow: 500ms;
+
+  /* Layout */
+  --sidebar-width: 250px;
+  --header-height: 60px;
+  --content-max-width: 1200px;
+  
+  /* Diğer */
+  --gantt-bar-height: 20px;
+}
+
+/* Dark mode değişkenleri (opsiyonel) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #1a2533;
+    --secondary-color: #2980b9;
+    --light-color: #2c3440;
+    --dark-color: #0f141e;
+    --status-planned: #0d47a1;
+    --status-planned-text: #bbdefb;
+    --status-in-progress: #e65100;
+    --status-in-progress-text: #ffecb3;
+    --status-delayed: #b71c1c;
+    --status-delayed-text: #ffcdd2;
+    --status-completed: #1b5e20;
+    --status-completed-text: #c8e6c9;
+  }
+}

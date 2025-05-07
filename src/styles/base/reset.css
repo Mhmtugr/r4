@@ -1,0 +1,129 @@
+/**
+ * Modern CSS Reset ve Temel Stiller
+ */
+
+/* Box sizing kuralları */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Margin sıfırlama */
+body,
+h1, h2, h3, h4, h5, h6,
+p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+/* Body ayarları */
+body {
+  min-height: 100vh;
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  font-family: var(--font-family);
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+  overflow-x: hidden;
+}
+
+/* Görsel responsive ayarları */
+img, picture {
+  max-width: 100%;
+  display: block;
+}
+
+/* Form elementlerini inherit fontlar */
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* Gereksiz animasyonları kaldır */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Temel link stilleri */
+a {
+  color: var(--secondary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast) ease;
+}
+
+a:hover, a:focus {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* Liste reset */
+ul, ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Tablo reset */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Focus outline reset */
+:focus {
+  outline: 3px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* Temel yardımcı sınıflar */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Ana container */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Yükleme göstergesi */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--gray-200);
+  border-top-color: var(--secondary-color);
+  border-radius: 50%;
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

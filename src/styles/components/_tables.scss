@@ -1,0 +1,22 @@
+// R3/index.html'den taşınan tablo stilleri
+
+.custom-table {
+  // Bootstrap tablo stillerini genişletmek veya üzerine yazmak için kullanılabilir
+  // Örneğin, özel kenarlıklar, dolgular veya renkler
+
+  th {
+    background-color: var(--light-color); // Değişken kullanıldı
+    font-weight: 600;
+    border-bottom-width: 2px; // Daha belirgin başlık alt çizgisi
+  }
+
+  td,
+  th {
+    vertical-align: middle; // İçeriği dikey olarak ortala
+  }
+
+  // Satır hover efekti (isteğe bağlı)
+  tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+}

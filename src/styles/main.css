@@ -1,0 +1,302 @@
+/**
+ * METS - MehmetEndüstriyelTakip Ana CSS Dosyası
+ */
+
+/* Base styles */
+@import './base/variables.css';
+@import './base/reset.css';
+
+/* Layout ve Temel Komponenetler */
+
+/* Sidebar stili */
+.sidebar {
+  background-color: var(--primary-color);
+  color: var(--white);
+  height: 100vh;
+  position: fixed;
+  padding-top: var(--spacing-xl);
+  width: var(--sidebar-width);
+  transition: transform var(--transition) ease;
+  z-index: var(--z-overlay);
+}
+
+.sidebar-header {
+  padding: 0 var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .logo {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+}
+
+.sidebar .nav-item {
+  margin-bottom: var(--spacing-xs);
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  color: var(--gray-300);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.sidebar .nav-link:hover, 
+.sidebar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  text-decoration: none;
+}
+
+.sidebar .nav-link i {
+  margin-right: var(--spacing-sm);
+  font-size: 1.2em;
+}
+
+/* Ana içerik alanı */
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  transition: margin-left var(--transition);
+}
+
+/* Card stilleri */
+.card {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: var(--spacing-lg);
+  transition: transform var(--transition);
+  background-color: var(--white);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+  background-color: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-body {
+  padding: var(--spacing-lg);
+}
+
+/* Status badges */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.status-planned {
+  background-color: var(--status-planned);
+  color: var(--status-planned-text);
+}
+
+.status-in-progress {
+  background-color: var(--status-in-progress);
+  color: var(--status-in-progress-text);
+}
+
+.status-delayed {
+  background-color: var(--status-delayed);
+  color: var(--status-delayed-text);
+}
+
+.status-completed {
+  background-color: var(--status-completed);
+  color: var(--status-completed-text);
+}
+
+/* Priority indicators */
+.priority-high {
+  border-left: 4px solid var(--danger-color);
+}
+
+.priority-medium {
+  border-left: 4px solid var(--warning-color);
+}
+
+.priority-low {
+  border-left: 4px solid var(--success-color);
+}
+
+/* AI chatbot */
+.ai-chatbot {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: var(--z-overlay);
+}
+
+.ai-chatbot-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--secondary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.ai-chatbot-btn:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: var(--danger-color);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Gantt chart styles */
+.gantt-container {
+  font-size: var(--font-size-xs);
+}
+
+.gantt-header {
+  font-weight: bold;
+}
+
+.gantt-day {
+  border: 1px solid var(--gray-300);
+  padding: 2px;
+}
+
+.gantt-row {
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.gantt-bar {
+  height: var(--gantt-bar-height);
+  border-radius: var(--border-radius-sm);
+  position: absolute;
+  top: 5px;
+}
+
+/* Chat modal styles */
+.chat-message {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+}
+
+.chat-message-content {
+  max-width: 80%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+}
+
+.chat-message-user .chat-message-content {
+  background-color: var(--secondary-color);
+  color: white;
+  margin-left: auto;
+  border-radius: var(--border-radius) 0 var(--border-radius) var(--border-radius);
+}
+
+.chat-message-bot .chat-message-content {
+  background-color: var(--gray-200);
+  color: var(--gray-900);
+  border-radius: 0 var(--border-radius) var(--border-radius) var(--border-radius);
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .main-content.pushed {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: var(--spacing-md);
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .card-header .btn-group,
+  .card-header .dropdown {
+    margin-top: var(--spacing-sm);
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .main-content {
+    padding: var(--spacing-sm);
+  }
+  
+  .card-body {
+    padding: var(--spacing-md);
+  }
+}
+
+/* Materyal durumları için renkler */
+.material-required {
+  background-color: var(--material-required-bg);
+}
+
+.material-available {
+  background-color: var(--material-available-bg);
+}
+
+.material-critical {
+  background-color: var(--material-critical-bg);
+}
+
+/* İnce progress bar */
+.progress-thin {
+  height: 5px;
+}
+
+/* Form kontrolleri için özel stil */
+.form-control:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}

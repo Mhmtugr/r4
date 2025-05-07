@@ -1,0 +1,30 @@
+// R3/index.html'den taşınan Gantt şeması stilleri
+
+.gantt-container {
+    font-size: 12px;
+}
+
+.gantt-header {
+    font-weight: bold;
+}
+
+.gantt-day {
+    border: 1px solid #dee2e6; // Renk değişkeni kullanılabilir
+    padding: 2px;
+}
+
+.gantt-row {
+    height: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.gantt-bar {
+    height: 20px;
+    border-radius: 3px;
+    position: absolute;
+    top: 5px;
+}
+
+// Diğer Gantt veya planlama stilleri buraya eklenebilir
+// ... existing code ... 

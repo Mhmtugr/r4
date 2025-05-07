@@ -1,0 +1,35 @@
+// R3/index.html'den taşınan kart stilleri
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
+}
+
+.card-header {
+    background-color: white; // Veya var(--bg-card-header)
+    border-bottom: 1px solid var(--border-color); // Değişken kullanıldı
+    font-weight: 600;
+}
+
+// R3/index.html'den taşınan kart öncelik stilleri
+
+.priority-high {
+    border-left: 4px solid var(--danger-color); // Değişken kullanıldı
+}
+
+.priority-medium {
+    border-left: 4px solid var(--warning-color); // Değişken kullanıldı
+}
+
+.priority-low {
+    border-left: 4px solid var(--success-color); // Değişken kullanıldı
+}
+
+// Diğer kart stilleri buraya eklenebilir

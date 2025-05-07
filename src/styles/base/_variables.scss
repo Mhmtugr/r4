@@ -1,0 +1,51 @@
+// Renk Paleti (ornekindex.html'den taşındı ve CSS değişkenleri olarak tanımlandı)
+:root {
+    --primary-color: #2c3e50; // Sidebar background
+    --secondary-color: #3498db; // AI Chatbot button
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --light-color: #ecf0f1; // Custom table header
+    --dark-color: #34495e;
+    --bg-content: #f5f7fa; // Main content background
+    --text-primary: #333; // Default text
+    --text-secondary: #555;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    --bg-header: #ffffff; // Header background
+    --bg-input: #ffffff;
+    --bg-sidebar: var(--primary-color);
+    --sidebar-text: rgba(255, 255, 255, 0.8);
+    --sidebar-text-active: #ffffff;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+
+    // Status badge colors from ornekindex.html
+    --status-planned-bg: #e3f2fd;
+    --status-planned-text: #1976d2;
+    --status-in-progress-bg: #fff8e1;
+    --status-in-progress-text: #ff8f00;
+    --status-delayed-bg: #ffebee;
+    --status-delayed-text: #d32f2f;
+    --status-completed-bg: #e8f5e9;
+    --status-completed-text: #388e3c;
+
+    // Material status colors from ornekindex.html
+    --material-required-bg: #fff3e0;
+    --material-available-bg: #e8f5e9;
+    --material-critical-bg: #ffebee;
+}
+
+// SASS Variables for components (using CSS vars where possible)
+$primary: var(--primary-color);
+$secondary: var(--secondary-color);
+$success: var(--success-color);
+$warning: var(--warning-color);
+$danger: var(--danger-color);
+$info: #17a2b8; // Keep Bootstrap info or use a variable
+$light: var(--light-color);
+$dark: var(--dark-color);
+
+// Layout değişkenleri (ornekindex.html ile uyumlu)
+$sidebar-width: 250px;
+$sidebar-collapsed-width: 70px; // Define a collapsed width
+$header-height: 64px; // Match AppHeader height

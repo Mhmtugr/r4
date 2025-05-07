@@ -1,0 +1,91 @@
+@use "base/variables" as vars;
+@use "base/reset";
+@use "base/base";
+@use "layout/layout";
+@use "layout/sidebar";
+@use "components/buttons";
+@use "components/cards";
+@use "components/badges";
+@use "components/dashboard-widgets";
+@use "components/charts";
+@use "components/chat";
+
+// Theme colors
+:root {
+  --primary: #3a75c4;
+  --primary-light: #4e89d8;
+  --primary-dark: #2a65b4;
+  --secondary: #6c757d;
+  --success: #28a745;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --bg-sidebar: #2c3e50;
+  --bg-main: #f4f6f9;
+  --border-color: #dee2e6;
+  --text-color: #333;
+  --text-muted: #6c757d;
+  --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+  --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+// Global styles
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-color);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+// Status badges
+.status-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.status-planned { background-color: #cfe2ff; color: #084298; }
+.status-progress { background-color: #fff3cd; color: #664d03; }
+.status-delayed { background-color: #f8d7da; color: #842029; }
+.status-completed { background-color: #d1e7dd; color: #0f5132; }
+
+// Chart containers
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 250px;
+}
+
+// Responsive breakpoints
+$sidebar-width: vars.$sidebar-width;
+$sidebar-collapsed-width: vars.$sidebar-collapsed-width;
+$header-height: vars.$header-height;
+$footer-height: 50px;
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b8bec3;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}

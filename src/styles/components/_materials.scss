@@ -1,0 +1,13 @@
+// R3/index.html'den taşınan malzeme durum stilleri
+
+.material-required {
+    background-color: var(--material-required-bg); // Değişken kullanıldı
+}
+
+.material-available {
+    background-color: var(--material-available-bg); // Değişken kullanıldı
+}
+
+.material-critical {
+    background-color: var(--material-critical-bg); // Değişken kullanıldı
+}

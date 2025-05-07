@@ -1,0 +1,70 @@
+@use "../base/variables" as vars;
+
+// Sidebar stilleri (ornekindex.html'den taşındı)
+.sidebar {
+  background-color: var(--bg-sidebar); // CSS değişkeni kullanıldı
+  color: var(--sidebar-text); // CSS değişkeni kullanıldı
+  height: 100vh;
+  position: fixed;
+  padding-top: 20px;
+  width: vars.$sidebar-width; // SASS değişkeni kullanıldı
+  transition: width 0.3s ease; // Geçiş eklendi
+
+  .nav-link {
+    color: var(--sidebar-text);
+    margin-bottom: 5px;
+    border-radius: 5px;
+    padding: 10px 15px;
+    display: flex; // İkon ve metni hizalamak için
+    align-items: center; // İkon ve metni hizalamak için
+
+    &:hover,
+    &.active {
+      background-color: var(--sidebar-hover-bg); // CSS değişkeni kullanıldı
+      color: var(--sidebar-text-active); // CSS değişkeni kullanıldı
+    }
+
+    i {
+      margin-right: 10px;
+      width: 20px; // İkon genişliği sabitlendi
+      text-align: center;
+    }
+  }
+
+  // Çöktüğünde stiller (örnek)
+  &.collapsed {
+    width: vars.$sidebar-collapsed-width;
+
+    .nav-link span {
+      display: none; // Metni gizle
+    }
+
+    .sidebar-footer p {
+        display: none; // Alt bilgiyi gizle
+    }
+  }
+
+  // Alt kısım (Footer)
+  .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      text-align: center;
+      color: var(--sidebar-text);
+      font-size: 0.8rem;
+  }
+}
+
+// Bu global stiller _layout.scss veya _responsive.scss içine taşınabilir
+/*
+.main-content {
+  transition: margin-left 0.3s ease;
+  margin-left: vars.$sidebar-width;
+}
+
+.sidebar-collapsed .main-content {
+  margin-left: vars.$sidebar-collapsed-width;
+}
+*/

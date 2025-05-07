@@ -1,0 +1,56 @@
+// R3/index.html'den taşınan temel stiller
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; // Fontları _variables.scss içine alabiliriz
+    background-color: var(--bg-content); // Değişken kullanıldı
+}
+
+// Genel Layout Stilleri (Layout bileşenlerine taşınabilir)
+.main-content {
+    // Sidebar genişliği değişkene bağlanabilir
+    margin-left: 250px; // Sabit sidebar genişliği varsayılıyor
+    padding: 20px;
+}
+
+// Genel Kart Stili (components/_cards.scss içine taşındı)
+/*
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+
+    &:hover {
+        transform: translateY(-5px);
+    }
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+*/
+
+// Genel Tablo Stilleri (components/_tables.scss içine taşındı)
+/*
+.custom-table th {
+    background-color: var(--light-color); // Değişken kullanıldı
+    font-weight: 600;
+}
+*/
+
+// Malzeme Durumları (components/_materials.scss dosyasına taşındı)
+/*
+.material-required {
+    background-color: var(--material-required-bg);
+}
+
+.material-available {
+    background-color: var(--material-available-bg);
+}
+
+.material-critical {
+    background-color: var(--material-critical-bg);
+}
+*/
