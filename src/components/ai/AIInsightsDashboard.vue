@@ -1,426 +1,584 @@
-&lt;template&gt;
-  &lt;div class="ai-insights-dashboard"&gt;
-    &lt;div class="dashboard-header"&gt;
-      &lt;h2&gt;AI Üretim Analizi ve Öneriler&lt;/h2&gt;
-      &lt;button @click="refreshInsights" :disabled="isLoading" class="refresh-btn"&gt;
-        &lt;i class="fas fa-sync-alt" :class="{ 'fa-spin': isLoading }"&gt;&lt;/i&gt;
-        Yenile
-      &lt;/button&gt;
-    &lt;/div&gt;
+<template>
+  <div class="ai-insights-dashboard">
+    <div class="ai-insights-header">
+      <h4 class="ai-insights-title">
+        <i class="bi bi-cpu"></i>
+        Yapay Zeka İçgörüleri
+      </h4>
+      <div class="ai-insights-controls">
+        <button class="btn btn-sm btn-outline-secondary" @click="refreshInsights">
+          <i class="bi bi-arrow-clockwise"></i>
+          <span class="d-none d-md-inline ms-1">Yenile</span>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary ms-2" @click="toggleFilter">
+          <i class="bi" :class="showFilter ? 'bi-funnel-fill' : 'bi-funnel'"></i>
+          <span class="d-none d-md-inline ms-1">Filtrele</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Filtreler -->
+    <div class="ai-insights-filter mb-3" v-if="showFilter">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">Departman</label>
+            <select class="form-select" v-model="filter.department">
+              <option value="">Tümü</option>
+              <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select class="form-select" v-model="filter.category">
+              <option value="">Tümü</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">Önem</label>
+            <select class="form-select" v-model="filter.importance">
+              <option value="">Tümü</option>
+              <option value="high">Yüksek</option>
+              <option value="medium">Orta</option>
+              <option value="low">Düşük</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="d-flex justify-content-end">
+            <button class="btn btn-sm btn-secondary" @click="resetFilter">
+              <i class="bi bi-x-circle me-1"></i>
+              Sıfırla
+            </button>
+            <button class="btn btn-sm btn-primary ms-2" @click="applyFilter">
+              <i class="bi bi-check-circle me-1"></i>
+              Uygula
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- İçgörüler listesi -->
+    <div class="ai-insights-content">
+      <div v-if="isLoading" class="ai-insights-loading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <span class="mt-2">İçgörüler yükleniyor...</span>
+      </div>
+      
+      <div v-else-if="filteredInsights.length === 0" class="ai-insights-empty">
+        <i class="bi bi-search"></i>
+        <p>İçgörü bulunamadı.</p>
+      </div>
+      
+      <div v-else class="ai-insights-grid">
+        <div v-for="insight in filteredInsights" :key="insight.id" class="ai-insight-card">
+          <div class="ai-insight-card-header">
+            <div class="ai-insight-card-title">
+              <i :class="getInsightIcon(insight)"></i>
+              <h6 class="m-0 ms-2">{{ insight.title }}</h6>
+            </div>
+            <div class="ai-insight-card-badges">
+              <span class="badge" :class="getImportanceBadge(insight.importance)">
+                {{ getImportanceLabel(insight.importance) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="ai-insight-card-content">
+            <p class="mb-2">{{ insight.description }}</p>
+            
+            <!-- Tahmin sonuçları varsa -->
+            <div v-if="insight.predictions && insight.predictions.length > 0" class="mt-3">
+              <PredictionResults 
+                :predictions="insight.predictions" 
+                :confidence="insight.confidence || 0.7"
+              />
+            </div>
+            
+            <!-- CAD model önizlemesi varsa -->
+            <div v-if="insight.modelId" class="mt-3">
+              <ModelPreview 
+                :modelId="insight.modelId"
+                :name="insight.modelName"
+              />
+            </div>
+            
+            <!-- İlgili dokümanlar varsa -->
+            <div v-if="insight.relatedDocuments && insight.relatedDocuments.length > 0" class="mt-3">
+              <RelatedDocuments 
+                :documents="insight.relatedDocuments"
+                @view="viewDocument"
+              />
+            </div>
+          </div>
+          
+          <div class="ai-insight-card-footer">
+            <div class="ai-insight-card-meta">
+              <span class="ai-insight-card-department">{{ insight.department }}</span>
+              <span class="ai-insight-card-date">
+                <i class="bi bi-clock me-1"></i>
+                {{ formatDate(insight.date) }}
+              </span>
+            </div>
+            <div class="ai-insight-card-actions">
+              <button 
+                v-if="insight.actions && insight.actions.includes('analyze')" 
+                class="btn btn-sm btn-outline-primary"
+                @click="analyzeInsight(insight)"
+              >
+                <i class="bi bi-graph-up me-1"></i>
+                Analiz Et
+              </button>
+              <button 
+                v-if="insight.actions && insight.actions.includes('view3d')" 
+                class="btn btn-sm btn-outline-info ms-1"
+                @click="viewModel(insight.modelId)"
+              >
+                <i class="bi bi-box me-1"></i>
+                3D Görünüm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analizler için ML Panel -->
+    <MachineLearningPanel 
+      v-if="showMlPanel" 
+      @close="showMlPanel = false"
+      @run-prediction="runPrediction"
+    />
+    
+    <!-- 3D Model Görüntüleme -->
+    <CADViewerModal
+      v-if="selectedModelId"
+      :modelId="selectedModelId"
+      @close="selectedModelId = null"
+    />
+    
+    <!-- ML Çalıştırma Sonucu -->
+    <div v-if="mlResult" class="ml-result-modal" @click="closeMlResult">
+      <div class="ml-result-content" @click.stop>
+        <div class="ml-result-header">
+          <h5>Analiz Sonucu</h5>
+          <button class="btn-close" @click="closeMlResult"></button>
+        </div>
+        <div class="ml-result-body">
+          <PredictionResults 
+            :predictions="mlResult.predictions"
+            :confidence="mlResult.confidence"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
-    &lt;div v-if="isLoading" class="loading-container"&gt;
-      &lt;div class="spinner"&gt;&lt;/div&gt;
-      &lt;p&gt;AI analiz oluşturuluyor...&lt;/p&gt;
-    &lt;/div&gt;
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useAiService } from '@/services/ai-service'
+import PredictionResults from './PredictionResults.vue'
+import MachineLearningPanel from './MachineLearningPanel.vue'
+import ModelPreview from './ModelPreview.vue'
+import RelatedDocuments from './RelatedDocuments.vue'
+import CADViewerModal from './CADViewerModal.vue'
 
-    &lt;div v-else-if="error" class="error-container"&gt;
-      &lt;p&gt;{{ error }}&lt;/p&gt;
-      &lt;button @click="refreshInsights" class="retry-btn"&gt;Tekrar Dene&lt;/button&gt;
-    &lt;/div&gt;
+// State
+const insights = ref([])
+const isLoading = ref(true)
+const showFilter = ref(false)
+const filter = reactive({
+  department: '',
+  category: '',
+  importance: ''
+})
+const showMlPanel = ref(false)
+const selectedModelId = ref(null)
+const mlResult = ref(null)
 
-    &lt;div v-else-if="insights" class="insights-container"&gt;
-      &lt;!-- Efficiency Section --&gt;
-      &lt;div class="insight-card efficiency"&gt;
-        &lt;div class="card-header"&gt;
-          &lt;h3&gt;&lt;i class="fas fa-chart-line"&gt;&lt;/i&gt; Üretim Verimliliği&lt;/h3&gt;
-        &lt;/div&gt;
-        &lt;div class="card-body"&gt;
-          &lt;div class="metric-row"&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value"&gt;%{{ insights.efficiencyTrends.currentEfficiency }}&lt;/span&gt;
-              &lt;span class="metric-label"&gt;Güncel Verimlilik&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value" :class="getChangeClass(insights.efficiencyTrends.weeklyChange)"&gt;
-                {{ insights.efficiencyTrends.weeklyChange }}
-              &lt;/span&gt;
-              &lt;span class="metric-label"&gt;Haftalık Değişim&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value" :class="getChangeClass(insights.efficiencyTrends.monthlyChange)"&gt;
-                {{ insights.efficiencyTrends.monthlyChange }}
-              &lt;/span&gt;
-              &lt;span class="metric-label"&gt;Aylık Değişim&lt;/span&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;p class="insight-text"&gt;{{ insights.efficiencyTrends.insights }}&lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+// AI servisi
+const aiService = useAiService()
 
-      &lt;!-- Bottlenecks Section --&gt;
-      &lt;div class="insight-card bottlenecks"&gt;
-        &lt;div class="card-header"&gt;
-          &lt;h3&gt;&lt;i class="fas fa-exclamation-triangle"&gt;&lt;/i&gt; Darboğazlar&lt;/h3&gt;
-        &lt;/div&gt;
-        &lt;div class="card-body"&gt;
-          &lt;div class="bottleneck-item primary"&gt;
-            &lt;span class="bottleneck-label"&gt;Birincil:&lt;/span&gt;
-            &lt;span class="bottleneck-value"&gt;{{ insights.bottlenecks.primaryBottleneck }}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="bottleneck-item secondary"&gt;
-            &lt;span class="bottleneck-label"&gt;İkincil:&lt;/span&gt;
-            &lt;span class="bottleneck-value"&gt;{{ insights.bottlenecks.secondaryBottleneck }}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="bottleneck-item affected"&gt;
-            &lt;span class="bottleneck-label"&gt;Etkilenen Siparişler:&lt;/span&gt;
-            &lt;span class="bottleneck-value"&gt;{{ insights.bottlenecks.affectedOrders }}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;p class="insight-text"&gt;{{ insights.bottlenecks.insights }}&lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-
-      &lt;!-- Delayed Orders Section --&gt;
-      &lt;div class="insight-card delayed"&gt;
-        &lt;div class="card-header"&gt;
-          &lt;h3&gt;&lt;i class="fas fa-clock"&gt;&lt;/i&gt; Geciken Siparişler&lt;/h3&gt;
-        &lt;/div&gt;
-        &lt;div class="card-body"&gt;
-          &lt;div class="metric-row"&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value"&gt;{{ insights.delayedOrders.count }}&lt;/span&gt;
-              &lt;span class="metric-label"&gt;Gecikmiş Sipariş&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value alert"&gt;%{{ insights.delayedOrders.percentage }}&lt;/span&gt;
-              &lt;span class="metric-label"&gt;Tüm Siparişlerin Yüzdesi&lt;/span&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;p&gt;&lt;strong&gt;Gecikme Modeli:&lt;/strong&gt; {{ insights.delayedOrders.patterns }}&lt;/p&gt;
-          &lt;p class="insight-text"&gt;{{ insights.delayedOrders.insights }}&lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-
-      &lt;!-- Material Shortages Section --&gt;
-      &lt;div class="insight-card materials"&gt;
-        &lt;div class="card-header"&gt;
-          &lt;h3&gt;&lt;i class="fas fa-boxes"&gt;&lt;/i&gt; Malzeme Durumu&lt;/h3&gt;
-        &lt;/div&gt;
-        &lt;div class="card-body"&gt;
-          &lt;div class="metric-row"&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value alert"&gt;{{ insights.materialShortages.criticalCount }}&lt;/span&gt;
-              &lt;span class="metric-label"&gt;Kritik Malzemeler&lt;/span&gt;
-            &lt;/div&gt;
-            &lt;div class="metric"&gt;
-              &lt;span class="metric-value"&gt;%{{ insights.materialShortages.criticalPercentage }}&lt;/span&gt;
-              &lt;span class="metric-label"&gt;Tüm Malzemelerin Yüzdesi&lt;/span&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
-          &lt;div class="critical-materials"&gt;
-            &lt;h4&gt;En Kritik Malzemeler:&lt;/h4&gt;
-            &lt;ul&gt;
-              &lt;li v-for="(material, index) in insights.materialShortages.mostCritical" :key="index"&gt;
-                {{ material }}
-              &lt;/li&gt;
-            &lt;/ul&gt;
-          &lt;/div&gt;
-          &lt;p class="insight-text"&gt;{{ insights.materialShortages.insights }}&lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-
-      &lt;!-- Recommendations Section --&gt;
-      &lt;div class="insight-card recommendations"&gt;
-        &lt;div class="card-header"&gt;
-          &lt;h3&gt;&lt;i class="fas fa-lightbulb"&gt;&lt;/i&gt; AI Öneriler&lt;/h3&gt;
-        &lt;/div&gt;
-        &lt;div class="card-body"&gt;
-          &lt;ul class="recommendation-list"&gt;
-            &lt;li v-for="(recommendation, index) in insights.recommendations" :key="index"&gt;
-              {{ recommendation }}
-            &lt;/li&gt;
-          &lt;/ul&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-
-    &lt;div v-else class="empty-state"&gt;
-      &lt;p&gt;AI analizini başlatmak için "Yenile" butonuna tıklayın.&lt;/p&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
-
-&lt;script&gt;
-import { ref, onMounted } from 'vue';
-import { useAIService } from '@/modules/ai';
-import { useLogger } from '@/utils/logger';
-
-export default {
-  name: 'AIInsightsDashboard',
+// Filtrelenmiş içgörüler
+const filteredInsights = computed(() => {
+  let result = [...insights.value]
   
-  setup() {
-    const aiService = useAIService();
-    const logger = useLogger();
-    
-    const insights = ref(null);
-    const isLoading = ref(false);
-    const error = ref(null);
-    
-    // Function to get AI insights
-    const refreshInsights = async () => {
-      isLoading.value = true;
-      error.value = null;
-      
-      try {
-        insights.value = await aiService.generateProductionInsights();
-        logger.info('AI insights generated successfully');
-      } catch (err) {
-        logger.error('Error generating AI insights:', err);
-        error.value = 'AI analizi oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.';
-      } finally {
-        isLoading.value = false;
-      }
-    };
-    
-    // Helper to determine CSS class for change values
-    const getChangeClass = (changeValue) => {
-      if (!changeValue) return '';
-      
-      if (changeValue.includes('+')) {
-        return 'positive';
-      } else if (changeValue.includes('-')) {
-        return 'negative';
-      }
-      return '';
-    };
-    
-    // Load insights when component is mounted
-    onMounted(() => {
-      refreshInsights();
-    });
-    
-    return {
-      insights,
-      isLoading,
-      error,
-      refreshInsights,
-      getChangeClass
-    };
+  if (filter.department) {
+    result = result.filter(insight => insight.department === filter.department)
+  }
+  
+  if (filter.category) {
+    result = result.filter(insight => insight.category === filter.category)
+  }
+  
+  if (filter.importance) {
+    result = result.filter(insight => insight.importance === filter.importance)
+  }
+  
+  return result
+})
+
+// Departman listesi
+const departments = computed(() => {
+  const depts = new Set()
+  insights.value.forEach(insight => {
+    if (insight.department) {
+      depts.add(insight.department)
+    }
+  })
+  return [...depts]
+})
+
+// Kategori listesi
+const categories = computed(() => {
+  const cats = new Set()
+  insights.value.forEach(insight => {
+    if (insight.category) {
+      cats.add(insight.category)
+    }
+  })
+  return [...cats]
+})
+
+// İçgörü tipine göre ikon al
+const getInsightIcon = (insight) => {
+  const category = insight.category ? insight.category.toLowerCase() : ''
+  
+  switch (category) {
+    case 'üretim':
+    case 'production':
+      return 'bi bi-gear-fill'
+    case 'stok':
+    case 'inventory':
+      return 'bi bi-box-seam-fill'
+    case 'kalite':
+    case 'quality':
+      return 'bi bi-check-circle-fill'
+    case 'analiz':
+    case 'analysis':
+      return 'bi bi-graph-up'
+    case 'bakım':
+    case 'maintenance':
+      return 'bi bi-tools'
+    case 'planlama':
+    case 'planning':
+      return 'bi bi-calendar-event'
+    default:
+      return 'bi bi-lightbulb-fill'
   }
 }
-&lt;/script&gt;
 
-&lt;style lang="scss" scoped&gt;
+// Önem derecesine göre sınıf
+const getImportanceBadge = (importance) => {
+  switch (importance) {
+    case 'high':
+      return 'bg-danger'
+    case 'medium':
+      return 'bg-warning'
+    case 'low':
+      return 'bg-info'
+    default:
+      return 'bg-secondary'
+  }
+}
+
+// Önem derecesi etiketi
+const getImportanceLabel = (importance) => {
+  switch (importance) {
+    case 'high':
+      return 'Yüksek'
+    case 'medium':
+      return 'Orta'
+    case 'low':
+      return 'Düşük'
+    default:
+      return 'Normal'
+  }
+}
+
+// Tarihi formatla
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return dateString
+  
+  return new Intl.DateTimeFormat('tr-TR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }).format(date)
+}
+
+// İçgörüleri yükle
+const loadInsights = async () => {
+  try {
+    isLoading.value = true
+    const data = await aiService.getInsights()
+    insights.value = data || []
+  } catch (error) {
+    console.error('İçgörüler yüklenirken hata:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// İçgörüleri yenile
+const refreshInsights = () => {
+  loadInsights()
+}
+
+// Filtre panelini göster/gizle
+const toggleFilter = () => {
+  showFilter.value = !showFilter.value
+}
+
+// Filtre uygula
+const applyFilter = () => {
+  showFilter.value = false
+  // Filtreleme computed property üzerinden otomatik yapılıyor
+}
+
+// Filtreyi sıfırla
+const resetFilter = () => {
+  filter.department = ''
+  filter.category = ''
+  filter.importance = ''
+}
+
+// İçgörü analizi yap
+const analyzeInsight = (insight) => {
+  showMlPanel.value = true
+}
+
+// 3D Modeli görüntüle
+const viewModel = (modelId) => {
+  selectedModelId.value = modelId
+}
+
+// Dokümanı görüntüle
+const viewDocument = (document) => {
+  const url = document.url || document.path
+  if (url) {
+    window.open(url, '_blank')
+  } else {
+    alert('Doküman bulunamadı')
+  }
+}
+
+// ML tahmin çalıştır
+const runPrediction = async (analysisType, options) => {
+  try {
+    const result = await aiService.runPrediction(analysisType, options)
+    mlResult.value = result
+    showMlPanel.value = false
+  } catch (error) {
+    console.error('Tahmin çalıştırılırken hata:', error)
+    alert('Tahmin çalıştırılırken bir hata oluştu')
+  }
+}
+
+// ML sonuçlarını kapat
+const closeMlResult = () => {
+  mlResult.value = null
+}
+
+// Component oluşturulduğunda
+onMounted(() => {
+  loadInsights()
+})
+</script>
+
+<style scoped>
 .ai-insights-dashboard {
-  padding: 1rem;
-  
-  .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    
-    h2 {
-      margin: 0;
-      color: var(--primary-color, #2c3e50);
-    }
-    
-    .refresh-btn {
-      padding: 0.5rem 1rem;
-      background-color: var(--primary-color, #4c6ef5);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      
-      &:hover {
-        background-color: var(--primary-color-dark, #364fc7);
-      }
-      
-      &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    }
+  padding: 20px;
+}
+
+.ai-insights-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ai-insights-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-insights-filter {
+  background-color: var(--bg-light, #f8f9fa);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.ai-insights-loading,
+.ai-insights-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-muted, #6c757d);
+}
+
+.ai-insights-empty i {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.ai-insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.ai-insight-card {
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-insight-card-header {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-insight-card-title {
+  display: flex;
+  align-items: center;
+}
+
+.ai-insight-card-title i {
+  font-size: 18px;
+  color: var(--primary-color, #0d6efd);
+}
+
+.ai-insight-card-content {
+  padding: 15px;
+  flex: 1;
+}
+
+.ai-insight-card-footer {
+  padding: 10px 15px;
+  border-top: 1px solid var(--border-color, #dee2e6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-light, #f8f9fa);
+}
+
+.ai-insight-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 12px;
+  color: var(--text-muted, #6c757d);
+}
+
+.ai-insight-card-department {
+  font-weight: 500;
+}
+
+/* ML sonuç modalı */
+.ml-result-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.ml-result-content {
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ml-result-header {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ml-result-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Koyu tema desteği */
+@media (prefers-color-scheme: dark) {
+  .ai-insights-dashboard {
+    color: #f8f9fa;
   }
   
-  .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem;
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-left-color: var(--primary-color, #4c6ef5);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+  .ai-insights-filter,
+  .ai-insight-card {
+    background-color: var(--dark-bg, #212529);
+    border-color: var(--dark-border-color, #495057);
   }
   
-  .error-container {
-    text-align: center;
-    padding: 2rem;
-    background-color: rgba(255, 0, 0, 0.1);
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    
-    .retry-btn {
-      padding: 0.5rem 1rem;
-      background-color: var(--primary-color, #4c6ef5);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
+  .ai-insight-card-header,
+  .ai-insight-card-footer {
+    border-color: var(--dark-border-color, #495057);
   }
   
-  .insights-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-    
-    .insight-card {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      
-      .card-header {
-        padding: 1rem;
-        background-color: var(--secondary-color, #e9ecef);
-        
-        h3 {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1.1rem;
-          
-          i {
-            font-size: 1rem;
-          }
-        }
-      }
-      
-      .card-body {
-        padding: 1rem;
-      }
-      
-      .metric-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-        
-        .metric {
-          text-align: center;
-          flex: 1;
-          
-          .metric-value {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: bold;
-            
-            &.positive {
-              color: var(--success-color, #20c997);
-            }
-            
-            &.negative {
-              color: var(--danger-color, #fa5252);
-            }
-            
-            &.alert {
-              color: var(--warning-color, #fd7e14);
-            }
-          }
-          
-          .metric-label {
-            font-size: 0.8rem;
-            color: #6c757d;
-          }
-        }
-      }
-      
-      .bottleneck-item {
-        margin-bottom: 0.5rem;
-        
-        .bottleneck-label {
-          font-weight: bold;
-          margin-right: 0.5rem;
-        }
-        
-        &.primary .bottleneck-value {
-          color: var(--danger-color, #fa5252);
-        }
-        
-        &.secondary .bottleneck-value {
-          color: var(--warning-color, #fd7e14);
-        }
-      }
-      
-      .critical-materials {
-        h4 {
-          font-size: 1rem;
-          margin-top: 0.5rem;
-          margin-bottom: 0.5rem;
-        }
-        
-        ul {
-          padding-left: 1.5rem;
-          margin-top: 0.5rem;
-          
-          li {
-            color: var(--danger-color, #fa5252);
-          }
-        }
-      }
-      
-      .recommendation-list {
-        padding-left: 1.5rem;
-        
-        li {
-          margin-bottom: 0.75rem;
-        }
-      }
-      
-      .insight-text {
-        font-style: italic;
-        color: #495057;
-        margin-top: 0.5rem;
-      }
-    }
-    
-    // Special styling for specific cards
-    .efficiency {
-      grid-column: span 2;
-    }
-    
-    .recommendations {
-      grid-column: span 2;
-    }
+  .ai-insight-card-footer {
+    background-color: var(--dark-bg-light, #2c3034);
   }
   
-  .empty-state {
-    text-align: center;
-    padding: 3rem;
-    background-color: #f8f9fa;
-    border-radius: 8px;
+  .ai-insights-loading,
+  .ai-insights-empty,
+  .ai-insight-card-meta {
+    color: #adb5bd;
+  }
+  
+  .ml-result-content {
+    background-color: var(--dark-bg, #212529);
+    color: #f8f9fa;
+  }
+  
+  .ml-result-header {
+    border-color: var(--dark-border-color, #495057);
   }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .insights-container {
-    .insight-card {
-      grid-column: 1 / -1 !important;
-    }
-    
-    .metric-row {
-      flex-direction: column;
-      
-      .metric {
-        margin-bottom: 1rem;
-      }
-    }
+/* Responsive */
+@media (max-width: 576px) {
+  .ai-insights-dashboard {
+    padding: 10px;
+  }
+  
+  .ai-insights-grid {
+    grid-template-columns: 1fr;
   }
 }
-&lt;/style&gt;
+</style>

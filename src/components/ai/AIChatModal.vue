@@ -1,620 +1,957 @@
 <template>
-  <div
-    class="ai-chat-modal"
-    :class="{ 'is-open': isOpen, 'is-minimized': isMinimized }"
-  >
-    <!-- Modal Header -->
-    <div class="ai-chat-modal__header">
-      <div class="ai-chat-modal__title">
-        <span class="ai-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="3" y1="9" x2="21" y2="9"></line>
-            <line x1="9" y1="21" x2="9" y2="9"></line>
-          </svg>
-        </span>
-        <span>METS Asistan</span>
-      </div>
-      <div class="ai-chat-modal__actions">
-        <button
-          v-if="!isMinimized"
-          class="action-button minimize-button"
-          @click="minimizeChat"
-          title="Küçült"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
-        <button
-          v-else
-          class="action-button expand-button"
-          @click="expandChat"
-          title="Genişlet"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <polyline points="9 21 3 21 3 15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-        </button>
-        <button
-          class="action-button close-button"
-          @click="closeModal"
-          title="Kapat"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Chat Messages Area -->
-    <div v-if="!isMinimized" class="ai-chat-modal__body" ref="chatBodyRef">
-      <!-- Welcome message -->
-      <div class="ai-chat-modal__welcome" v-if="messages.length === 0">
-        <h3>METS Asistana Hoş Geldiniz</h3>
-        <p>Size nasıl yardımcı olabilirim?</p>
-        <div class="ai-chat-modal__suggestions">
-          <button 
-            v-for="(suggestion, index) in suggestions" 
-            :key="`suggestion-${index}`"
-            @click="sendMessage(suggestion)"
-            class="suggestion-button"
-          >
-            {{ suggestion }}
+  <div class="ai-chat-modal" v-if="isVisible">
+    <div class="ai-chat-container">
+      <div class="ai-chat-header">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-robot me-2"></i>
+          <h5 class="m-0">Yapay Zeka Asistanı</h5>
+          <span v-if="activeModel && activeModel.name" class="model-badge ms-2">{{ activeModel.name }}</span>
+        </div>
+        <div class="ai-chat-actions">
+          <button class="btn btn-link" @click="toggleModelSelector" title="AI Modeli Değiştir">
+            <i class="bi bi-gear"></i>
+          </button>
+          <button class="btn btn-link" @click="handleClearChat" title="Sohbeti Temizle">
+            <i class="bi bi-trash"></i>
+          </button>
+          <button class="btn btn-link" @click="$emit('close')" title="Kapat">
+            <i class="bi bi-x-lg"></i>
           </button>
         </div>
       </div>
       
-      <!-- Message history -->
-      <div v-else class="ai-chat-modal__messages">
-        <div
-          v-for="(msg, i) in messages"
-          :key="`msg-${i}`"
-          class="ai-chat-modal__message"
-          :class="{
-            'user-message': msg.role === 'user',
-            'assistant-message': msg.role === 'assistant'
-          }"
-        >
-          <div class="message-avatar">
-            <span v-if="msg.role === 'user'" class="user-avatar">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="7" r="4"></circle>
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              </svg>
-            </span>
-            <span v-else class="assistant-avatar">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="9" y1="21" x2="9" y2="9"></line>
-              </svg>
-            </span>
-          </div>
-          <div class="message-content">
-            <!-- Display formatted message with line breaks -->
-            <div v-html="formatMessage(msg.content)"></div>
-            <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
-          </div>
-        </div>
-
-        <!-- Loading indicator -->
-        <div v-if="isLoading" class="ai-chat-modal__loading">
-          <div class="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+      <div v-if="showModelSelector" class="model-selector">
+        <h6>AI Modeli Seç</h6>
+        <div class="model-options">
+          <div 
+            v-for="(model, key) in supportedModels" 
+            :key="key"
+            :class="['model-option', activeModel && activeModel.key === key ? 'active' : '']"
+            @click="selectModel(key)"
+          >
+            <div class="model-option-name">{{ model.name }}</div>
+            <div class="model-option-capabilities">
+              <span v-for="(cap, i) in model.capabilities" :key="i" class="model-capability">{{ cap }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Input Area -->
-    <div v-if="!isMinimized" class="ai-chat-modal__input">
-      <textarea
-        ref="inputRef"
-        v-model="inputValue"
-        placeholder="Bir soru sorun..."
-        @keydown.enter.prevent="handleEnterPress"
-        rows="1"
-      ></textarea>
-      <button
-        class="ai-chat-modal__send"
-        :disabled="isLoading || !inputValue.trim()"
-        @click="sendMessage()"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"></line>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
-      </button>
+      
+      <div class="ai-chat-content" ref="chatContent">
+        <div v-if="history.length === 0" class="ai-message ai-message-bot">
+          <div class="ai-message-content">
+            <p>Merhaba! Size nasıl yardımcı olabilirim?</p>
+            <p class="small mb-0">Üretim durumları, malzeme stokları veya teknik bilgiler hakkında sorular sorabilirsiniz.</p>
+            <div class="ai-quick-actions">
+              <button @click="setQuickQuestion('Üretim durumu nedir?')" class="btn btn-sm btn-outline-primary">Üretim durumu</button>
+              <button @click="setQuickQuestion('Geciken siparişler hangileri?')" class="btn btn-sm btn-outline-primary">Geciken siparişler</button>
+              <button @click="setQuickQuestion('RM 36 CB hücresi 3D modelini göster')" class="btn btn-sm btn-outline-primary">3D Model</button>
+              <button @click="setQuickQuestion('Gelecek hafta üretim tahmini')" class="btn btn-sm btn-outline-primary">Üretim tahmini</button>
+            </div>
+          </div>
+        </div>
+        
+        <div v-for="(message, index) in history" :key="index" 
+             :class="['ai-message', message.role === 'user' ? 'ai-message-user' : 'ai-message-bot']">
+          <div class="ai-message-content">
+            <div v-if="message.isSystemMessage" class="ai-system-message">
+              <i class="bi bi-info-circle me-2"></i>
+              {{ message.content }}
+            </div>
+            <p v-else-if="message.content">{{ message.content }}</p>
+            
+            <!-- CAD Model Preview -->
+            <div v-if="message.modelPreview" class="ai-cad-preview">
+              <div class="preview-header d-flex justify-content-between align-items-center">
+                <span>{{ message.modelPreview.name }}</span>
+                <button class="btn btn-sm btn-primary" @click="openModelViewer(message.modelPreview)">
+                  3D Görünüm <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </button>
+              </div>
+              <div class="preview-image" @click="openModelViewer(message.modelPreview)">
+                <img :src="message.modelPreview.image || '/assets/images/models/placeholder.png'" alt="CAD Model">
+                <div class="preview-overlay">
+                  <span>3D Modeli Görüntüle</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ML Prediction Results -->
+            <div v-if="message.prediction && message.prediction.predictions" class="ai-prediction-results">
+              <div class="prediction-header">
+                <span>{{ message.prediction.modelType || 'Tahmin Sonuçları' }}</span>
+                <span class="prediction-confidence">Güven: {{ formatConfidence(message.prediction.confidence) }}</span>
+              </div>
+              <div class="prediction-list">
+                <div v-for="(pred, i) in message.prediction.predictions.slice(0, 3)" :key="i" class="prediction-item">
+                  <div class="prediction-item-title">{{ pred.label }}</div>
+                  <div class="prediction-item-value">{{ pred.value }}</div>
+                  <div v-if="pred.trend" :class="['prediction-trend', getTrendClass(pred.trend)]">
+                    <i class="bi" :class="getTrendIcon(pred.trend)"></i>
+                    {{ pred.trendValue || '' }}
+                  </div>
+                </div>
+                <button 
+                  v-if="message.prediction.predictions.length > 3" 
+                  class="btn btn-sm btn-outline-primary mt-2"
+                  @click="openPredictionDetails(message)"
+                >
+                  Tüm sonuçları göster ({{ message.prediction.predictions.length }})
+                </button>
+                
+                <div v-if="message.prediction.explanation" class="prediction-explanation mt-2">
+                  <p class="small">{{ message.prediction.explanation }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Related Documents -->
+            <div v-if="message.relatedDocs && message.relatedDocs.length > 0" class="ai-related-docs">
+              <div class="related-docs-header">İlgili Belgeler:</div>
+              <div class="related-docs-list">
+                <div 
+                  v-for="(doc, i) in message.relatedDocs.slice(0, 2)" 
+                  :key="i" 
+                  class="related-doc-item"
+                  @click="openDocument(doc)"
+                >
+                  <i class="bi bi-file-earmark-text me-2"></i>
+                  <span>{{ doc.name }}</span>
+                </div>
+                <button 
+                  v-if="message.relatedDocs.length > 2" 
+                  class="btn btn-sm btn-link"
+                  @click="openDocumentsModal(message.relatedDocs)"
+                >
+                  + {{ message.relatedDocs.length - 2 }} belge daha
+                </button>
+              </div>
+            </div>
+            
+            <p v-if="message.source && !message.isSystemMessage" class="ai-message-source">
+              <small>Kaynak: {{ message.source }}</small>
+            </p>
+          </div>
+        </div>
+        
+        <div v-if="isProcessing" class="ai-message ai-message-bot">
+          <div class="ai-message-content">
+            <div class="ai-typing">
+              <div class="ai-typing-dot"></div>
+              <div class="ai-typing-dot"></div>
+              <div class="ai-typing-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ai-chat-input">
+        <form @submit.prevent="handleSendMessage">
+          <div class="input-group">
+            <button 
+              class="btn btn-outline-secondary dropdown-toggle" 
+              type="button" 
+              @click="toggleAdvancedOptions"
+              :title="showAdvancedOptions ? 'Seçenekleri gizle' : 'Gelişmiş sorgu seçenekleri'"
+            >
+              <i class="bi" :class="showAdvancedOptions ? 'bi-caret-up' : 'bi-caret-down'"></i>
+            </button>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Mesajınızı yazın..." 
+              v-model="userInput"
+              :disabled="isProcessing" 
+              @keypress.enter="handleSendMessage" 
+            >
+            <button class="btn btn-primary" type="submit" :disabled="isProcessing || !userInput.trim()">
+              <i class="bi" :class="isProcessing ? 'bi-hourglass-split' : 'bi-send'"></i>
+            </button>
+          </div>
+          
+          <div v-if="showAdvancedOptions" class="advanced-options">
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" v-model="options.searchTechnicalDocs" id="technicalDocsOption">
+                  <label class="form-check-label" for="technicalDocsOption">Teknik dokümanlarda ara</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" v-model="options.searchCADModels" id="cadModelsOption">
+                  <label class="form-check-label" for="cadModelsOption">3D modellerde ara</label>
+                </div>
+              </div>
+            </div>
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <select class="form-select form-select-sm" v-model="selectedModelType" :disabled="!options.searchCADModels">
+                  <option value="">Tüm model tipleri</option>
+                  <option value="rm36cb">RM 36 CB</option>
+                  <option value="rm36lb">RM 36 LB</option>
+                  <option value="rm36bc">RM 36 BC</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <div class="text-end">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="clearHistory"
+                    title="Tüm sohbet geçmişini temizle"
+                  >
+                    Sohbeti Temizle
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
+  
+  <!-- CAD Model Viewer Modal -->
+  <model-viewer-modal 
+    v-if="selectedModel" 
+    :model="selectedModel" 
+    :show="!!selectedModel" 
+    @close="closeModelViewer" 
+  />
+  
+  <!-- Prediction Details Modal -->
+  <prediction-details-modal
+    v-if="selectedPredictions"
+    :predictions="selectedPredictions"
+    :prediction-type="selectedPredictionType"
+    :confidence="selectedConfidence"
+    :show="!!selectedPredictions"
+    @close="closePredictionDetails"
+  />
+  
+  <!-- Documents Modal -->
+  <documents-modal
+    v-if="selectedDocuments && selectedDocuments.length"
+    :documents="selectedDocuments"
+    :show="!!selectedDocuments"
+    @close="closeDocumentsModal"
+  />
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
-import { aiService } from '@/services/ai-service';
-import { useToast } from '@/composables/useToast';
+import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { useAiService } from '@/services/ai-service'
+import ModelViewerModal from './ModelViewerModal.vue'
+import PredictionDetailsModal from './PredictionDetailsModal.vue'
+import DocumentsModal from './DocumentsModal.vue'
+import { useTechnicalStore } from '@/store/technical';
 
-// Component props and emits
+// Props
 const props = defineProps({
-  isOpen: {
+  isVisible: {
     type: Boolean,
     default: false
   }
-});
+})
 
-const emit = defineEmits(['close']);
+// Emit
+const emit = defineEmits(['close'])
 
-// Component state
-const isMinimized = ref(false);
-const isLoading = ref(false);
-const inputValue = ref('');
-const messages = ref([]);
-const chatBodyRef = ref(null);
-const inputRef = ref(null);
+// Servisler
+const aiService = useAiService()
+const technicalStore = useTechnicalStore();
+const { 
+  sendMessage, 
+  history, 
+  isProcessing, 
+  clearHistory, 
+  supportedModels, 
+  switchModel, 
+  getCurrentModel, 
+  getSystemData,
+  modelComponents,
+  modelMeasurements
+} = aiService
 
-// Composables
-const toast = useToast();
+// State
+const userInput = ref('')
+const chatContent = ref(null)
+const showModelSelector = ref(false)
+const showAdvancedOptions = ref(false)
+const activeModel = ref(null)
+const selectedModel = ref(null)
+const selectedPredictions = ref(null)
+const selectedPredictionType = ref('')
+const selectedConfidence = ref(0)
+const selectedDocuments = ref(null)
+const selectedModelType = ref('')
+const options = ref({
+  searchTechnicalDocs: false,
+  runPrediction: false,
+  searchCADModels: false
+})
 
-// Predefined suggestions
-const suggestions = [
-  'Geciken siparişler hangileri?',
-  'Kritik malzeme durumu nedir?',
-  'CB hücresi teknik belgeleri',
-  'Bugünün üretim özeti'
-];
-
-// Lifecycle hooks
-onMounted(() => {
-  // Initialize the AI service
-  if (!aiService.isInitialized) {
-    aiService.initialize();
-  }
+// Hesaplanmış değerler
+const shouldSearchTechnical = computed(() => {
+  if (options.value.searchTechnicalDocs) return true;
   
-  // Auto-focus input when modal opens
-  watch(() => props.isOpen, (isOpen) => {
-    if (isOpen && !isMinimized.value) {
-      nextTick(() => {
-        focusInput();
-      });
-    }
-  }, { immediate: true });
+  // Alakalı anahtar kelimeler varsa otomatik olarak teknik dokümanlarda ara
+  const keywords = ['teknik', 'doküman', 'şartname', 'talimat', 'çizim', 'manual', 'katalog'];
+  return keywords.some(keyword => userInput.value.toLowerCase().includes(keyword));
+})
+
+const shouldRunPrediction = computed(() => {
+  if (options.value.runPrediction) return true;
   
-  // Scroll to bottom when new messages are added
-  watch(() => messages.value.length, () => {
-    nextTick(() => {
-      scrollToBottom();
-    });
-  });
-});
+  // Tahmin ile ilgili anahtar kelimeler varsa otomatik olarak tahmin analizi çalıştır
+  const keywords = ['tahmin', 'öngör', 'analiz', 'trend', 'gelecek', 'hafta', 'ay', 'ne olacak', 'beklen'];
+  return keywords.some(keyword => userInput.value.toLowerCase().includes(keyword));
+})
 
-// Methods
-const focusInput = () => {
-  if (inputRef.value) {
-    inputRef.value.focus();
+const shouldSearchCADModels = computed(() => {
+  if (options.value.searchCADModels) return true;
+  
+  // 3D model ile ilgili anahtar kelimeler varsa otomatik olarak model ara
+  const keywords = ['3d', 'model', 'cad', 'çizim', 'görselleştir', 'ar', 'vr', 'göster'];
+  return keywords.some(keyword => userInput.value.toLowerCase().includes(keyword));
+})
+
+// AI modeli seçildiğinde
+const selectModel = async (modelKey) => {
+  if (switchModel(modelKey)) {
+    activeModel.value = getCurrentModel();
+    showModelSelector.value = false;
   }
-};
+}
 
-const scrollToBottom = () => {
-  if (chatBodyRef.value) {
-    chatBodyRef.value.scrollTop = chatBodyRef.value.scrollHeight;
-  }
-};
+// AI model seçicisini göster/gizle
+const toggleModelSelector = () => {
+  showModelSelector.value = !showModelSelector.value;
+  activeModel.value = getCurrentModel();
+}
 
-const minimizeChat = () => {
-  isMinimized.value = true;
-};
+// Gelişmiş seçenekleri göster/gizle
+const toggleAdvancedOptions = () => {
+  showAdvancedOptions.value = !showAdvancedOptions.value;
+}
 
-const expandChat = () => {
-  isMinimized.value = false;
+// Mesaj gönderme
+const handleSendMessage = async () => {
+  if (!userInput.value.trim() || isProcessing.value) return
+
+  const userMessage = userInput.value
+  userInput.value = ''
+  
+  // Bir mesaj gönderildikten sonra mesaj alanına odaklan
   nextTick(() => {
-    focusInput();
-    scrollToBottom();
+    const inputElement = document.querySelector('.ai-chat-input input')
+    if (inputElement) {
+      inputElement.focus()
+    }
   });
-};
 
-const closeModal = () => {
-  emit('close');
-};
-
-const formatTime = (timestamp) => {
-  if (!timestamp) return '';
-  
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString('tr-TR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-const formatMessage = (content) => {
-  if (!content) return '';
-  
-  // Convert line breaks to HTML
-  return content
-    .replace(/\n/g, '<br>')
-    // Auto-link order IDs
-    .replace(/(\b#?\d{4}-\d{4}\b)/g, '<a href="#" class="order-link">$1</a>')
-    // Auto-link material IDs
-    .replace(/(\bM-\d{6}\b)/g, '<a href="#" class="material-link">$1</a>');
-};
-
-const handleEnterPress = (e) => {
-  // Only send on Enter without shift key
-  if (!e.shiftKey) {
-    sendMessage();
+  try {
+    // Standart mesaj gönderimi
+    let response = await sendMessage(userMessage)
+    
+    // Teknik dokümanlarda ara
+    if (shouldSearchTechnical.value) {
+      await searchTechnicalDocuments(userMessage)
+    }
+    
+    // CAD modelleri ara
+    if (shouldSearchCADModels.value && !response?.modelPreview) {
+      await processCADModelRequest(userMessage)
+    }
+    
+    await scrollToBottom()
+  } catch (error) {
+    console.error('AI yanıtı alınamadı:', error)
   }
-};
+}
 
-// Send message to AI service
-const sendMessage = async (customMessage = null) => {
-  const messageText = customMessage || inputValue.value.trim();
+// Teknik dokümanlarda ara
+const searchTechnicalDocuments = async (query) => {
+  try {
+    // Teknik dokümanları ara
+    const documents = await technicalStore.performTechnicalQuery(query);
+    
+    if (documents && documents.length > 0) {
+      // Son mesaja ek olarak ilgili dokümanları ekle
+      const lastMessage = history.value[history.value.length - 1];
+      if (lastMessage && lastMessage.role === 'assistant') {
+        lastMessage.relatedDocs = documents.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          category: doc.category,
+          version: doc.version
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Teknik doküman araması hatası:', error);
+  }
+}
+
+// CAD model isteğini işle
+const processCADModelRequest = async (query) => {
+  const modelKeywords = {
+    'rm 36 cb': 'rm36cb',
+    'rm36cb': 'rm36cb',
+    'rm 36 lb': 'rm36lb',
+    'rm36lb': 'rm36lb',
+    'rm 36 bc': 'rm36bc',
+    'rm36bc': 'rm36bc',
+    'akım trafosu': 'tr36ai',
+    'trafo': 'tr36ai',
+    'tr36ai': 'tr36ai',
+  }
   
-  if (!messageText || isLoading.value) return;
+  let modelId = selectedModelType.value
   
-  // Add user message to chat
-  messages.value.push({
-    role: 'user',
-    content: messageText,
-    timestamp: new Date()
-  });
+  // Model tipini sorgudan tespit et
+  if (!modelId) {
+    const lowerQuery = query.toLowerCase()
+    for (const [keyword, id] of Object.entries(modelKeywords)) {
+      if (lowerQuery.includes(keyword)) {
+        modelId = id
+        break
+      }
+    }
+  }
   
-  // Reset input
-  inputValue.value = '';
-  focusInput();
+  if (!modelId) return
   
   try {
-    isLoading.value = true;
+    // Sistem verilerinden model bilgisini al
+    const systemData = await getSystemData()
+    const model = systemData.cadModels.find(m => m.id === modelId.toLowerCase())
     
-    // Get AI response
-    const response = await aiService.askQuestion(messageText);
-    
-    // Add AI response to chat
-    messages.value.push({
-      role: 'assistant',
-      content: response,
-      timestamp: new Date()
-    });
-    
+    if (model) {
+      // Mesaj geçmişine ekle
+      history.value.push({
+        role: 'assistant',
+        content: `"${model.name}" 3D modelini buldum. Bu modeli incelemek ister misiniz?`,
+        timestamp: new Date(),
+        modelPreview: {
+          id: model.id,
+          name: model.name,
+          image: model.previewImage
+        },
+        source: 'CAD Model Asistanı',
+        relatedDocs: model.relatedDocs || []
+      })
+      
+      // Model bileşenlerini al
+      const components = await modelComponents(model.id)
+      if (components.success) {
+        // Özet bilgileri mesaj olarak ekle
+        const compCount = components.data.components.length;
+        history.value.push({
+          role: 'assistant',
+          content: `${model.name} modeli ${compCount} bileşenden oluşmaktadır. Ana bileşenler: ${components.data.components.slice(0, 2).map(c => c.name).join(', ')} ve diğerleri. 3D görünümde tüm detayları inceleyebilirsiniz.`,
+          source: 'CAD Analizi',
+          timestamp: new Date()
+        })
+      }
+    }
   } catch (error) {
-    console.error('AI error:', error);
-    
-    // Add error message
-    messages.value.push({
-      role: 'assistant',
-      content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.',
-      timestamp: new Date()
-    });
-    
-    toast.error('AI yanıtı alınırken bir hata oluştu.');
-  } finally {
-    isLoading.value = false;
+    console.error('CAD model işleme hatası:', error)
   }
-};
+}
 
-// Export component's public API for potential parent component use
-defineExpose({
-  minimizeChat,
-  expandChat,
-  sendMessage,
-});
+// Güven oranını formatla
+const formatConfidence = (confidence) => {
+  const value = Number(confidence)
+  if (isNaN(value)) return '?'
+  return `%${(value * 100).toFixed(0)}`
+}
+
+// Eğilim simgesini al
+const getTrendIcon = (trend) => {
+  if (trend > 0) return 'bi-arrow-up-right'
+  if (trend < 0) return 'bi-arrow-down-right'
+  return 'bi-dash'
+}
+
+// Eğilim sınıfını al
+const getTrendClass = (trend) => {
+  if (trend > 0) return 'trend-up'
+  if (trend < 0) return 'trend-down'
+  return 'trend-neutral'
+}
+
+// 3D model görüntüleyicisini aç
+const openModelViewer = (modelPreview) => {
+  // Veriyi uyumlu formata dönüştür
+  selectedModel.value = {
+    id: modelPreview.id,
+    name: modelPreview.name,
+    previewImage: modelPreview.image
+  }
+}
+
+// 3D model görüntüleyicisini kapat
+const closeModelViewer = () => {
+  selectedModel.value = null
+}
+
+// Tahmin detaylarını aç
+const openPredictionDetails = (message) => {
+  selectedPredictions.value = message.prediction.predictions
+  selectedPredictionType.value = message.prediction.modelType
+  selectedConfidence.value = message.prediction.confidence
+}
+
+// Tahmin detaylarını kapat
+const closePredictionDetails = () => {
+  selectedPredictions.value = null
+  selectedPredictionType.value = ''
+  selectedConfidence.value = 0
+}
+
+// Belgeleri aç
+const openDocument = (doc) => {
+  selectedDocuments.value = [doc]
+}
+
+// Belgeler modalını aç
+const openDocumentsModal = (docs) => {
+  selectedDocuments.value = docs
+}
+
+// Belgeler modalını kapat
+const closeDocumentsModal = () => {
+  selectedDocuments.value = null
+}
+
+// Hızlı soru ayarla
+const setQuickQuestion = (question) => {
+  userInput.value = question
+}
+
+// Chat geçmişini temizle
+const handleClearChat = () => {
+  if (confirm('Gerçekten sohbet geçmişini temizlemek istiyor musunuz?')) {
+    clearHistory()
+    showAdvancedOptions.value = false
+  }
+}
+
+// Chat alanını en aşağı kaydır
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatContent.value) {
+    chatContent.value.scrollTop = chatContent.value.scrollHeight
+  }
+}
+
+// Modal görünür olduğunda
+watch(() => props.isVisible, async (newVal) => {
+  if (newVal) {
+    await nextTick()
+    await scrollToBottom()
+    
+    const inputElement = document.querySelector('.ai-chat-input input')
+    if (inputElement) {
+      inputElement.focus()
+    }
+    
+    // Aktif modeli yükle
+    activeModel.value = getCurrentModel()
+  }
+})
+
+// Mesaj geçmişi değiştiğinde kaydır
+watch(history, scrollToBottom, { deep: true })
+
+// Component yüklendiğinde
+onMounted(() => {
+  activeModel.value = getCurrentModel()
+})
 </script>
 
-<style lang="scss">
+<style scoped>
 .ai-chat-modal {
   position: fixed;
-  bottom: 6rem;
-  right: 2rem;
-  width: 400px;
-  height: 500px;
-  background-color: var(--surface-overlay, white);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  bottom: 90px;
+  right: 20px;
+  width: 450px;
+  height: 600px;
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   z-index: 1000;
-  transition: all 0.3s ease;
-  opacity: 0;
-  transform: translateY(20px);
-  visibility: hidden;
-  border: 1px solid var(--surface-border, #ddd);
-  
-  @media (max-width: 768px) {
-    width: 90%;
-    height: 70vh;
-    right: 5%;
-    bottom: 5rem;
-  }
-  
-  // Modal states
-  &.is-open {
-    opacity: 1;
+  overflow: hidden;
+}
+
+.ai-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ai-chat-header {
+  padding: 15px;
+  background-color: var(--primary-color, #0d6efd);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-chat-actions .btn-link {
+  color: white;
+  padding: 0 8px;
+}
+
+.ai-chat-content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-message {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.ai-message-user {
+  justify-content: flex-end;
+}
+
+.ai-message-content {
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 18px;
+}
+
+.ai-message-bot .ai-message-content {
+  background-color: var(--light-color, #f0f2f5);
+  color: var(--dark-color, #343a40);
+}
+
+.ai-message-user .ai-message-content {
+  background-color: var(--primary-color, #0d6efd);
+  color: white;
+}
+
+.ai-message-content p {
+  margin: 0;
+}
+
+.ai-message-source {
+  margin-top: 5px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.ai-system-message {
+  font-style: italic;
+  color: var(--secondary-color, #6c757d);
+  font-size: 0.9em;
+}
+
+.ai-chat-input {
+  padding: 15px;
+  border-top: 1px solid var(--border-color, #dee2e6);
+}
+
+.ai-typing {
+  display: flex;
+  align-items: center;
+}
+
+.ai-typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--gray-color, #6c757d);
+  margin: 0 2px;
+  animation: typing 1s infinite ease-in-out;
+}
+
+.ai-typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.ai-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ai-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.model-selector {
+  background-color: var(--light-color, #f8f9fa);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+}
+
+.model-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.model-option {
+  padding: 10px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.model-option:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.model-option.active {
+  border-color: var(--primary-color, #0d6efd);
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.model-option-name {
+  font-weight: 600;
+}
+
+.model-option-capabilities {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.model-capability {
+  font-size: 0.7rem;
+  background-color: var(--light-color, #e9ecef);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.model-badge {
+  font-size: 0.7rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.advanced-options {
+  padding: 0.75rem;
+  background-color: var(--light-color, #f8f9fa);
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ai-quick-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-cad-preview {
+  margin-top: 10px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-header {
+  padding: 8px 12px;
+  background-color: var(--light-color, #f0f2f5);
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  font-weight: 500;
+}
+
+.preview-image {
+  position: relative;
+  height: 180px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s;
+}
+
+.preview-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  color: white;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+
+.preview-image:hover img {
+  transform: scale(1.05);
+}
+
+.preview-image:hover .preview-overlay {
+  transform: translateY(0);
+}
+
+.ai-prediction-results {
+  margin-top: 10px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+}
+
+.prediction-header {
+  padding: 8px 12px;
+  background-color: var(--light-color, #f0f2f5);
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+}
+
+.prediction-confidence {
+  font-size: 0.8rem;
+  background-color: var(--primary-color, #0d6efd);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.prediction-list {
+  padding: 10px;
+}
+
+.prediction-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  align-items: center;
+}
+
+.prediction-item:last-child {
+  border-bottom: none;
+}
+
+.prediction-item-title {
+  flex: 2;
+}
+
+.prediction-item-value {
+  flex: 1;
+  text-align: right;
+  font-weight: 500;
+}
+
+.prediction-trend {
+  margin-left: 10px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.prediction-explanation {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, #dee2e6);
+  font-size: 0.9em;
+  color: var(--secondary-color, #6c757d);
+}
+
+.trend-up {
+  color: var(--success-color, #198754);
+}
+
+.trend-down {
+  color: var(--danger-color, #dc3545);
+}
+
+.trend-neutral {
+  color: var(--secondary-color, #6c757d);
+}
+
+.ai-related-docs {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background-color: var(--light-color, #f8f9fa);
+  border-radius: 8px;
+}
+
+.related-docs-header {
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.related-doc-item {
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.related-doc-item:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+@keyframes typing {
+  0% {
     transform: translateY(0);
-    visibility: visible;
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Koyu mod desteği */
+@media (prefers-color-scheme: dark) {
+  .ai-chat-modal {
+    --bg-color: #212529;
+    --border-color: #495057;
+    --light-color: #343a40;
   }
   
-  &.is-minimized {
-    height: auto;
-    width: 300px;
+  .ai-message-bot .ai-message-content {
+    background-color: #343a40;
+    color: #f8f9fa;
   }
   
-  // Modal header
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background-color: var(--primary-color, #3b82f6);
-    color: white;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+  .ai-chat-input {
+    background-color: #212529;
   }
   
-  &__title {
-    display: flex;
-    align-items: center;
-    font-weight: 600;
-    font-size: 1rem;
-    
-    .ai-icon {
-      margin-right: 8px;
-    }
+  .model-selector,
+  .advanced-options {
+    background-color: #2c3034;
   }
   
-  &__actions {
-    display: flex;
-    gap: 8px;
-    
-    .action-button {
-      border: none;
-      background: none;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-      }
-    }
+  .model-capability {
+    background-color: #495057;
+    color: #e9ecef;
   }
   
-  // Modal body
-  &__body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  // Welcome message
-  &__welcome {
-    text-align: center;
-    margin: auto 0;
-    padding: 20px 0;
-    
-    h3 {
-      margin-bottom: 12px;
-      font-size: 1.25rem;
-      color: var(--text-color, #333);
-    }
-    
-    p {
-      margin-bottom: 24px;
-      color: var(--text-color-secondary, #666);
-    }
-  }
-  
-  &__suggestions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    
-    .suggestion-button {
-      background-color: var(--surface-hover, #f0f0f0);
-      border: 1px solid var(--surface-border, #ddd);
-      padding: 8px 12px;
-      border-radius: 16px;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      
-      &:hover {
-        background-color: var(--primary-color-light, #e1e9ff);
-        border-color: var(--primary-color, #3b82f6);
-      }
-    }
-  }
-  
-  // Messages
-  &__messages {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  &__message {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding-bottom: 8px;
-    
-    &.user-message {
-      flex-direction: row-reverse;
-      
-      .message-content {
-        background-color: var(--primary-color-light, #e1e9ff);
-        border-radius: 12px 12px 0 12px;
-      }
-    }
-    
-    &.assistant-message .message-content {
-      background-color: var(--surface-card, #f8f8f8);
-      border-radius: 12px 12px 12px 0;
-    }
-    
-    .message-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      
-      .user-avatar {
-        background-color: var(--primary-color, #3b82f6);
-        color: white;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .assistant-avatar {
-        background-color: var(--highlight-bg, #e9ecef);
-        color: var(--text-color, #333);
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
-    
-    .message-content {
-      padding: 12px;
-      max-width: 75%;
-      word-break: break-word;
-      position: relative;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      
-      .message-time {
-        display: block;
-        font-size: 0.7rem;
-        color: var(--text-color-secondary, #666);
-        margin-top: 4px;
-        text-align: right;
-      }
-      
-      a {
-        color: var(--primary-color, #3b82f6);
-        text-decoration: none;
-        
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-  
-  // Loading indicator
-  &__loading {
-    display: flex;
-    padding: 12px 0;
-    
-    .loading-dots {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      
-      span {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: var(--primary-color, #3b82f6);
-        animation: dotPulse 1.4s infinite ease-in-out;
-        
-        &:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        
-        &:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-      }
-      
-      @keyframes dotPulse {
-        0%, 100% {
-          opacity: 0.4;
-          transform: scale(0.8);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-    }
-  }
-  
-  // Input area
-  &__input {
-    padding: 12px 16px;
-    border-top: 1px solid var(--surface-border, #ddd);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--surface-overlay, white);
-    position: relative;
-    z-index: 1;
-    
-    textarea {
-      flex: 1;
-      border: 1px solid var(--surface-border, #ddd);
-      border-radius: 18px;
-      padding: 10px 16px;
-      resize: none;
-      font-family: inherit;
-      font-size: 0.9rem;
-      background-color: var(--surface-ground, #f8f8f8);
-      max-height: 100px;
-      overflow-y: auto;
-      
-      &:focus {
-        outline: none;
-        border-color: var(--primary-color, #3b82f6);
-      }
-    }
-    
-    .ai-chat-modal__send {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-color: var(--primary-color, #3b82f6);
-      color: white;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
-      
-      &:hover:not(:disabled) {
-        background-color: var(--primary-700, #1d4ed8);
-      }
-      
-      &:disabled {
-        background-color: var(--surface-border, #ddd);
-        cursor: not-allowed;
-      }
-    }
+  .ai-related-docs,
+  .prediction-header,
+  .preview-header {
+    background-color: #343a40;
+    color: #e9ecef;
   }
 }
 </style>
