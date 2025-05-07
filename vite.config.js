@@ -13,9 +13,33 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/**/*'],
+      // PWA manifestini etkinleştir ve public klasöründeki dosyayı kullan
+      manifest: {
+        name: "MehmetEndustriyelTakip",
+        short_name: "ElektroTrack",
+        description: "Orta Gerilim Hücre İmalat Takip Sistemi",
+        theme_color: "#1e40af",
+        background_color: "#f8fafc",
+        display: "standalone",
+        scope: "/",
+        start_url: "/",
+        icons: [
+          { src: 'assets/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: 'assets/icons/icon-384x384.png', sizes: '384x384', type: 'image/png' },
+          { src: 'assets/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
+        ],
+        shortcuts: [
+          { name: "Kontrol Paneli", short_name: "Dashboard", description: "Kontrol paneline git", url: "/dashboard", icons: [{ src: "assets/icons/shortcuts/dashboard.png", sizes: "96x96" }] },
+          { name: "Siparişler", short_name: "Siparişler", description: "Siparişlere git", url: "/orders", icons: [{ src: "assets/icons/shortcuts/orders.png", sizes: "96x96" }] },
+          { name: "Üretim", short_name: "Üretim", description: "Üretim sayfasına git", url: "/production", icons: [{ src: "assets/icons/shortcuts/production.png", sizes: "96x96" }] }
+        ],
+        categories: ["business", "productivity", "utilities"],
+        lang: "tr-TR",
+        dir: "ltr"
+      },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        globIgnores: ['**/node_modules/**/*', '**/unused/**/*'],
+        globIgnores: ['**/node_modules/**/*', '**/unused/**/*', '**/dist/**'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
@@ -31,17 +55,17 @@ export default defineConfig({
         ],
         // Service worker yapılandırması
         swDest: 'dist/sw.js',
-        navigateFallback: '/index.html',
+        navigateFallback: '/offline.html',
+        additionalManifestEntries: [
+          { url: 'offline.html', revision: null }
+        ],
         skipWaiting: true,
         clientsClaim: true
       },
-      // PWA manifest devre dışı - build hatalarını önlemek için
-      manifest: false,
       injectManifest: false,
       selfDestroying: false,
       strategies: 'generateSW',
       buildBase: '/',
-      // Devserver yenileme sorunlarını önleme
       devOptions: {
         enabled: true,
         type: 'module',
@@ -79,7 +103,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolveAbsolutePath('src'),
+      '@': path.resolve(__dirname, './src'),
       'vue': 'vue/dist/vue.esm-bundler.js',
       // Hatalı dosya yollarını önlemek için ekstra alias'lar
       '@views': resolveAbsolutePath('src/modules'),
@@ -109,7 +133,8 @@ export default defineConfig({
       'firebase/app',
       'firebase/auth',
       'firebase/firestore',
-      'firebase/storage'
+      'firebase/storage',
+      'bootstrap/dist/js/bootstrap.bundle.min.js'
     ],
     exclude: []
   },
@@ -131,8 +156,9 @@ export default defineConfig({
         sassOptions: {
           outputStyle: 'compressed',
           charset: false,
-          // Kullanımdan kaldırılmış özellikleri engelleme
+          // Uyarıları bastır ve hata mesajları gösterme
           quietDeps: true,
+          quiet: true,
           // Uyarıları hataya dönüştürmeyi engelleme
           strict: false,
           // İçe aktarma çözümlemesini iyileştirme
@@ -143,9 +169,10 @@ export default defineConfig({
           ],
           // Legacy API kullanımını bastır
           legacyWarning: false,
-          // SASS 2.0 uyumluluğunu zorunlu kıl
+          // SASS 2.0 uyumluluğunu zorunlu kılma
           futureWarning: false
-        }
+        },
+        warnWhenUsingLegacyJsAPI: false // Legacy JS API uyarılarını kapatır
       }
     }
   },
