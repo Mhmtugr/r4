@@ -1,0 +1,1 @@
+import{g as r,h as a,e}from"./vendor-vue.CBtg5bt5.js";const s={class:"order-reports"},o={__name:"OrderReports",setup:o=>(o,p)=>(e(),r("div",s,p[0]||(p[0]=[a("h2",null,"Sipariş Raporları",-1),a("p",null,"Burada sipariş raporları görüntülenecek.",-1)])))};export{o as default};
